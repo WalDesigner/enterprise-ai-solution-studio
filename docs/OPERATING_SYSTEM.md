@@ -2,7 +2,7 @@
 
 > Version: 2.2
 > 文档类型：稳定团队协作协议
-> 最后复核：2026-08-20（Asia/Shanghai）
+> 最后复核：2026-09-02（Asia/Shanghai）
 
 ## 1. Purpose
 

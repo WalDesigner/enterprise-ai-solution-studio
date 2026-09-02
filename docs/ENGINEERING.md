@@ -2,7 +2,7 @@
 
 > 文档类型：稳定工程流程事实源
 > Agent Operating System Version：2.2
-> 最后复核：2026-08-20（Asia/Shanghai）
+> 最后复核：2026-09-02（Asia/Shanghai）
 
 ## 1. 文件职责
 
@@ -78,6 +78,7 @@ QA_BASE_URL=http://127.0.0.1:3101 npm run qa:browser
 | Shared state / component | 上述检查 + 所有调用方、刷新、路由和状态一致性 |
 | QA / build config | 运行被修改的质量链路；影响应用构建时再跑 lint / build |
 | Milestone / pre-deploy | unit、lint、Browser QA、diff check、发布包和仓库卫生 |
+| Dependency security | `npm audit`、锁文件 diff、unit、lint、build；不盲目执行 major upgrade |
 
 `npm run qa:browser` 自带 production build，不需要在它之前机械重复 `npm run build`。
 单独 build 适用于不运行 Browser QA 的代码任务，或需要先隔离构建故障的场景。

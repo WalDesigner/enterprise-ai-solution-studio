@@ -2,7 +2,7 @@
 
 > 文档类型：可复用部署学习材料
 > 状态：当前有效
-> 最后复核：2026-08-20（Asia/Shanghai）
+> 最后复核：2026-09-02（Asia/Shanghai）
 > 当前线上版本和按钮级操作请读 `DEPLOYMENT_HANDOFF.md`；历史事故请读 Incident Report。
 
 ## 1. 先建立四层心智模型
