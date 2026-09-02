@@ -2,7 +2,7 @@
 
 > 文档类型：历史 Incident，覆盖 2026-07-15 至 2026-08-19
 > 状态：已恢复并结案
-> 最后复核：2026-08-20（Asia/Shanghai）
+> 最后复核：2026-09-02（Asia/Shanghai；历史结论未变）
 > 当前操作只以 `DEPLOYMENT_HANDOFF.md` 为准。
 
 ## 2026-08-19 最终恢复：CloudBase `010`
