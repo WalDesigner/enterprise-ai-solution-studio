@@ -1,402 +1,95 @@
 "use client";
 
-import {
-  ArrowRight,
-  BarChart3,
-  ClipboardCheck,
-  Database,
-  LineChart,
-  Network,
-  SearchCheck,
-  ServerCog,
-  Sparkles,
-  Users,
-} from "lucide-react";
+import { ArrowRight, ClipboardCheck, FileText, SearchCheck } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
-
 import { WorkspaceShell } from "@/components/workspace-shell";
-import {
-  getWorkflowStageAction,
-  getWorkflowStageIndex,
-  getWorkflowStageLabel,
-  PRODUCT_NAME_ZH,
-  PRODUCT_TAGLINE_ZH,
-  projectCatalog,
-} from "@/lib/current-project";
 import { useWorkspaceProject } from "@/components/workspace-provider";
-import { cn } from "@/lib/utils";
+import { WorkflowStepper } from "@/components/workflow-stepper";
+import { getWorkflowStageAction, getWorkflowStageLabel, projectCatalog } from "@/lib/current-project";
 
-type FeatureCard = {
-  title: string;
-  description: string;
-  icon: typeof SearchCheck;
-  metric: string;
-  tone: string;
-  href?: string;
-};
-
-const featureCards: ReadonlyArray<FeatureCard> = [
-  {
-    title: "需求分析",
-    description: "梳理客户行业、业务痛点、目标指标和可落地 AI 场景。",
-    icon: SearchCheck,
-    metric: "场景识别",
-    tone: "bg-sky-50 text-sky-700 ring-sky-100",
-    href: "/analysis",
-  },
-  {
-    title: "AI方案生成",
-    description: "输出方案结构、技术选型原因、PoC 范围和实施优先级。",
-    icon: Sparkles,
-    metric: "方案草案",
-    tone: "bg-violet-50 text-violet-700 ring-violet-100",
-    href: "/solution",
-  },
-  {
-    title: "Agent工作流",
-    description: "展示跨工具任务编排、人工确认节点和自动化执行路径。",
-    icon: Network,
-    metric: "流程设计",
-    tone: "bg-emerald-50 text-emerald-700 ring-emerald-100",
-  },
-  {
-    title: "RAG知识库",
-    description: "模拟企业知识检索、问答增强和售后知识沉淀流程。",
-    icon: Database,
-    metric: "知识增强",
-    tone: "bg-amber-50 text-amber-700 ring-amber-100",
-  },
-  {
-    title: "部署规划",
-    description: "规划模型接入、数据边界、上线步骤和交付风险。",
-    icon: ServerCog,
-    metric: "交付路径",
-    tone: "bg-slate-100 text-slate-700 ring-slate-200",
-    href: "/deployment",
-  },
-  {
-    title: "ROI报告",
-    description: "评估成本、收益、验证指标和管理层汇报口径。",
-    icon: LineChart,
-    metric: "价值评估",
-    tone: "bg-rose-50 text-rose-700 ring-rose-100",
-    href: "/roi",
-  },
+const guideSteps = [
+  { title: "说清业务问题", detail: "填写客户背景、业务痛点和目标。已准备好示例，不必从空白开始。", output: "输入：一份客户需求", href: "/analysis", icon: SearchCheck },
+  { title: "得到方案草案", detail: "在需求分析页生成 AI 草案，再到方案页查看并复核建议。", output: "产物：方案建议与风险", href: "/solution", icon: FileText },
+  { title: "判断值不值得做", detail: "用案例了解如何小范围试验、安排上线，并估算投入与回报。", output: "产物：验证与交付思路", href: "/poc", icon: ClipboardCheck },
 ] as const;
-
-const workflowTaskLabels = ["需求分析", "AI方案", "PoC验证", "部署规划", "ROI评估"] as const;
-
-const recentProjects = projectCatalog.slice(1);
-
-function getTaskState(index: number, currentStageIndex: number) {
-  if (index < currentStageIndex) {
-    return {
-      label: "已完成",
-      tone: "border-emerald-200 bg-emerald-50 text-emerald-700",
-      dot: "bg-emerald-500",
-    };
-  }
-
-  if (index === currentStageIndex) {
-    return {
-      label: "进行中",
-      tone: "border-slate-900 bg-slate-950 text-white",
-      dot: "bg-white",
-    };
-  }
-
-  return {
-    label: "待开始",
-    tone: "border-slate-200 bg-slate-50 text-slate-500",
-    dot: "bg-slate-300",
-  };
-}
 
 export default function Home() {
   const { activeProject, switchProject } = useWorkspaceProject();
-  const currentStageIndex = getWorkflowStageIndex(activeProject.workflowStage);
-
-  const taskStates = useMemo(
-    () =>
-      workflowTaskLabels.map((label, index) => ({
-        taskLabel: label,
-        index,
-        ...getTaskState(index, currentStageIndex),
-      })),
-    [currentStageIndex]
-  );
-
   return (
-    <WorkspaceShell
-      activeNav="dashboard"
-      breadcrumb="总览"
-      title={PRODUCT_NAME_ZH}
-      subtitle={PRODUCT_TAGLINE_ZH}
-      badge="交互式案例演示"
-    >
-      <section>
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex flex-col gap-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-              <div className="max-w-2xl">
-                <p className="text-sm font-medium text-slate-500">当前演示项目</p>
-                <h2 className="mt-2 text-2xl font-semibold text-slate-950">
-                  {activeProject.projectName}
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {activeProject.customerName} · {activeProject.projectStatus}
-                </p>
-              </div>
-              <div className="grid min-w-56 gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-500">当前阶段</span>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
-                    {getWorkflowStageLabel(activeProject.workflowStage)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-500">项目负责人</span>
-                  <span className="font-medium text-slate-950">{activeProject.owner}</span>
-                </div>
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-slate-500">数据属性</span>
-                  <span className="font-medium text-slate-950">{activeProject.lastUpdated}</span>
-                </div>
-              </div>
+    <WorkspaceShell activeNav="dashboard" breadcrumb="使用指引"
+      title="把企业需求，整理成可讨论的 AI 方案"
+      subtitle="给售前顾问和方案交付人员使用：先理解客户的问题，再生成方案草案，最后评估如何验证、上线和计算回报。"
+      badge="交互式案例演示">
+      <div className="space-y-6">
+        <section aria-labelledby="getting-started" className="rounded-2xl border border-teal-200/70 bg-gradient-to-br from-teal-50 to-white p-5 sm:p-7">
+          <div className="flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="max-w-2xl">
+              <p className="text-xs font-semibold tracking-wide text-teal-700">第一次来？从这里开始</p>
+              <h2 id="getting-started" className="mt-2 text-xl font-semibold text-slate-950">例如：客服查资料太慢，AI 能帮上什么忙？</h2>
+              <p className="mt-2 text-sm leading-6 text-slate-600">用一个示例客户走一遍“需求 → 草案 → 验证”的路径。无需注册；只浏览案例不会调用模型。</p>
             </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">客户</p>
-                <p className="mt-1 text-sm font-medium text-slate-950">
-                  {activeProject.customerName}
-                </p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">行业</p>
-                <p className="mt-1 text-sm font-medium text-slate-950">
-                  {activeProject.industry}
-                </p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">状态</p>
-                <p className="mt-1 text-sm font-medium text-slate-950">
-                  {activeProject.projectStatus}
-                </p>
-              </div>
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <p className="text-xs text-slate-500">下一步入口</p>
-                <p className="mt-1 text-sm font-medium text-slate-950">
-                  {getWorkflowStageAction(activeProject.workflowStage)}
-                  <span className="ml-1 text-xs font-normal text-slate-400">
-                    {activeProject.continueHref}
-                  </span>
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-              <Link
-                className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
-                href={activeProject.continueHref}
-              >
-                {getWorkflowStageAction(activeProject.workflowStage)}
-                <ArrowRight className="size-4" aria-hidden="true" />
-              </Link>
-              <Link
-                className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
-                href="/customers"
-              >
-                切换项目
-              </Link>
-              <p className="text-sm text-slate-500">
-                当前项目状态已同步到全站工作流，切换客户后会自动更新。
-              </p>
-            </div>
+            <Link href="/analysis#analysis-form" className="inline-flex min-h-12 shrink-0 items-center justify-center gap-2 rounded-xl bg-teal-800 px-5 text-sm font-semibold text-white transition-colors hover:bg-teal-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-teal-700">
+              从需求开始体验 <ArrowRight className="size-4" aria-hidden="true" />
+            </Link>
           </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex items-center gap-2">
-            <ClipboardCheck className="size-4 text-slate-500" aria-hidden="true" />
-            <h2 className="text-base font-semibold text-slate-950">今日待完成</h2>
-          </div>
-          <p className="mt-1 text-sm text-slate-500">
-            根据当前案例所处阶段展示的咨询交付推进节奏。
-          </p>
-
-          <div className="mt-5 space-y-3">
-            {taskStates.map((task) => (
-              <div
-                key={task.taskLabel}
-                className={cn(
-                  "flex items-center gap-3 rounded-xl border px-4 py-3",
-                  task.tone
-                )}
-              >
-                <span
-                  className={cn("size-2.5 rounded-full", task.dot)}
-                  aria-hidden="true"
-                />
-                <div className="flex-1">
-                  <p className="text-sm font-medium">{task.taskLabel}</p>
-                  <p
-                    className={cn(
-                      "mt-1 text-xs",
-                      task.index === currentStageIndex
-                        ? "text-white/75"
-                        : task.index < currentStageIndex
-                          ? "text-emerald-600"
-                          : "text-slate-400"
-                    )}
-                  >
-                    {task.index === currentStageIndex
-                      ? "当前正在执行"
-                      : task.index < currentStageIndex
-                        ? "已完成"
-                        : "待开始"}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex items-center justify-between gap-3">
+          <ol className="mt-6 grid gap-4 md:grid-cols-3">
+            {guideSteps.map((step, index) => {
+              const Icon = step.icon;
+              return <li key={step.title} className="rounded-xl border border-slate-200/80 bg-white/90 p-4">
+                <div className="flex items-center gap-2 text-xs font-semibold text-teal-700"><Icon className="size-4" aria-hidden="true" />0{index + 1}</div>
+                <h3 className="mt-3 font-semibold text-slate-950">{step.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{step.detail}</p>
+                <Link href={step.href} className="mt-3 inline-flex min-h-10 items-center gap-1 text-xs font-semibold text-teal-800 underline-offset-4 hover:underline">{step.output}<ArrowRight className="size-3.5" aria-hidden="true" /></Link>
+              </li>;
+            })}
+          </ol>
+          <p className="mt-4 text-xs leading-5 text-slate-600">真实 AI 位于需求分析的生成按钮；后续验证、部署与回报页面是案例推演，不会自动执行企业任务。</p>
+        </section>
+        <section aria-labelledby="current-project" className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-slate-500">项目动态</p>
-              <h2 className="mt-2 text-base font-semibold text-slate-950">
-                最近活动
-              </h2>
+              <p className="text-xs font-medium text-slate-500">继续当前项目 · <span>{activeProject.lastUpdated}</span></p>
+              <h2 id="current-project" className="mt-2 text-xl font-semibold text-slate-950">{activeProject.projectName}</h2>
+              <p className="mt-2 text-sm text-slate-600">{activeProject.industry} · 案例阶段：{getWorkflowStageLabel(activeProject.workflowStage)}</p>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">当前要解决：{activeProject.painPoints[0]}。</p>
             </div>
-            <BarChart3 className="size-5 text-slate-400" aria-hidden="true" />
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {activeProject.recentActivity.map((activity) => (
-              <div
-                key={`${activity.time}-${activity.title}`}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <div className="flex items-center justify-between gap-3">
-                  <p className="text-sm font-medium text-slate-950">{activity.title}</p>
-                  <span className="rounded-full border border-slate-200 bg-white px-2 py-1 text-[11px] font-medium text-slate-500">
-                    {activity.time}
-                  </span>
-                </div>
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {activity.detail}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="grid gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <h2 className="text-base font-semibold text-slate-950">客户管理入口</h2>
-              <p className="mt-1 text-sm text-slate-500">
-                所有客户均为脱敏案例，用于演示从分析到 ROI 的完整交付路径。
-              </p>
+            <div className="flex shrink-0 flex-col gap-2">
+              <Link href={activeProject.continueHref} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 text-sm font-medium text-white hover:bg-slate-700">{getWorkflowStageAction(activeProject.workflowStage)}<ArrowRight className="size-4" aria-hidden="true" /></Link>
+              <Link href="/customers" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-slate-200 px-4 text-sm font-medium text-slate-600 hover:bg-slate-50">切换项目</Link>
             </div>
-            <Users className="size-5 text-slate-400" aria-hidden="true" />
           </div>
-
-          <div className="mt-5 grid gap-3">
-            {recentProjects.map((project) => (
-              <div
-                key={project.id}
-                className="flex flex-col gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 sm:flex-row sm:items-center sm:justify-between"
-              >
-                <div>
-                  <p className="text-sm font-medium text-slate-950">{project.projectName}</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {project.customerName} · {project.projectStatus}
-                  </p>
-                </div>
-                <button
-                  className="inline-flex h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
-                  type="button"
-                  onClick={() => switchProject(project.id)}
-                >
-                  切换到此项目
-                </button>
+          <div className="mt-6 border-t border-slate-100 pt-5"><WorkflowStepper projectStage={activeProject.workflowStage} viewedStage={activeProject.workflowStage} autoScroll={false} /></div>
+          <p className="mt-3 text-xs leading-5 text-slate-500">阶段状态来自案例预设；浏览页面不会把项目标为完成。你填写的需求和生成的草案保存在当前浏览器。</p>
+        </section>
+        <details className="rounded-xl border border-slate-200 bg-white p-5">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">更多案例与项目动态</summary>
+          <div className="mt-5 grid gap-6 lg:grid-cols-2">
+            <section aria-label="切换演示案例">
+              <h2 className="text-sm font-semibold text-slate-950">换一个业务场景</h2>
+              <div className="mt-3 space-y-2">
+                {projectCatalog.map((project) => <button key={project.id} type="button" onClick={() => switchProject(project.id)} aria-pressed={project.id === activeProject.id} className="block min-h-11 w-full rounded-lg border border-slate-200 p-3 text-left text-sm text-slate-700 hover:border-teal-500 aria-pressed:border-teal-600 aria-pressed:bg-teal-50">
+                  {project.projectName}{project.id === activeProject.id ? " · 当前" : ""}
+                </button>)}
               </div>
-            ))}
+            </section>
+            <section aria-label="案例预设动态">
+              <h2 className="text-sm font-semibold text-slate-950">案例预设动态</h2>
+              <ul className="mt-3 divide-y divide-slate-100">
+                {activeProject.recentActivity.map((activity) => <li key={activity.time} className="py-3 first:pt-0"><p className="text-xs text-slate-500">{activity.time}</p><h3 className="mt-1 text-sm font-medium">{activity.title}</h3><p className="mt-1 text-sm leading-6 text-slate-600">{activity.detail}</p></li>)}
+              </ul>
+            </section>
           </div>
-        </div>
-
-        <div className="rounded-2xl border border-slate-900 bg-slate-950 p-5 text-white shadow-sm">
-          <p className="text-sm font-medium text-slate-300">下一步行动</p>
-          <h2 className="mt-3 text-xl font-semibold tracking-normal">
-            继续推进当前项目工作流
-          </h2>
-          <p className="mt-3 text-sm leading-6 text-slate-300">
-            现在可以继续补充客户需求，进入 AI 方案设计，再逐步推进 PoC 验证、部署规划和 ROI 评估。
-          </p>
-          <Link
-            className="mt-5 inline-flex h-10 w-full items-center justify-center rounded-lg bg-white px-4 text-sm font-medium text-slate-950 hover:bg-slate-200"
-            href={activeProject.continueHref}
-          >
-            {getWorkflowStageAction(activeProject.workflowStage)}
-          </Link>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {featureCards.map((feature) => {
-          const Icon = feature.icon;
-          const card = (
-            <article className="h-full rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-colors hover:border-slate-300">
-              <div className="flex items-start justify-between gap-4">
-                <div
-                  className={cn(
-                    "flex size-10 items-center justify-center rounded-xl ring-1",
-                    feature.tone
-                  )}
-                >
-                  <Icon className="size-5" aria-hidden="true" />
-                </div>
-                <span className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-medium text-slate-500">
-                  {feature.metric}
-                </span>
-              </div>
-              <h3 className="mt-4 text-base font-semibold text-slate-950">
-                {feature.title}
-              </h3>
-              <p className="mt-2 text-sm leading-6 text-slate-600">
-                {feature.description}
-              </p>
-              {feature.href ? (
-                <p className="mt-4 text-xs font-medium text-sky-700">
-                  进入 {feature.title} →
-                </p>
-              ) : null}
-            </article>
-          );
-
-          if (feature.href) {
-            return (
-              <Link
-                key={feature.title}
-                className="block rounded-2xl outline-none transition-transform focus-visible:ring-3 focus-visible:ring-sky-200"
-                href={feature.href}
-              >
-                {card}
-              </Link>
-            );
-          }
-
-          return <div key={feature.title}>{card}</div>;
-        })}
-      </section>
+        </details>
+        <details className="rounded-xl border border-slate-200 bg-white p-5">
+          <summary className="cursor-pointer text-sm font-semibold text-slate-700">术语速查：PoC、ROI、RAG 与 Agent 是什么？</summary>
+          <dl className="mt-4 grid gap-4 text-sm leading-6 sm:grid-cols-2">
+            <div><dt className="font-semibold">PoC · 小范围验证</dt><dd className="text-slate-600">先用少量样本测试方案是否值得继续投入；这里展示验证计划。</dd></div>
+            <div><dt className="font-semibold">ROI · 投入回报</dt><dd className="text-slate-600">比较预计收益和成本；这里的数字是案例假设，不是真实业绩。</dd></div>
+            <div><dt className="font-semibold">RAG · 先查资料再回答</dt><dd className="text-slate-600">为模型提供相关知识后再生成回答；本作品展示设计，不提供真实检索。</dd></div>
+            <div><dt className="font-semibold">Agent · 按步骤调用工具</dt><dd className="text-slate-600">让模型参与任务规划与工具使用；本作品展示方案，不运行后台智能体。</dd></div>
+          </dl>
+        </details>
+      </div>
     </WorkspaceShell>
   );
 }

@@ -22,7 +22,10 @@ Enterprise AI Solution Studio 已完成 interview-ready public demo MVP，当前
 Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 ```
 
-## 2. 当前可证明能力
+## 2. 当前作品可展示的能力
+
+2026-09-09 复核说明：下列是产品设计/代码证据，不等于本人已通过独立实现、客户现场
+交付或面试表达的能力测评。测试通过也不证明模型输出的业务准确率。
 
 ### 产品与解决方案
 
@@ -43,12 +46,18 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 
 - `lib/current-project.ts` 提供脱敏演示项目；当前项目和 Analysis 草案按项目保存到
   `localStorage`。
-- Next.js 16.2.12、React 19、TypeScript、Tailwind CSS 4、App Router。
+- 当前本地分支：Next.js 16.3.4、React 19、TypeScript、Tailwind CSS 4、App Router；未据此更新线上镜像。
 - Node.js 22 standalone Docker 容器运行于 CloudBase Run。
 - 单元测试、lint、production build 和 Playwright Browser QA 构成当前质量门。
 - 国内 CloudBase 主站是唯一推荐的公网演示入口。
 
 ## 3. 诚实边界
+
+2026-09-09 本地 UI 增量：Dashboard 导航改为“使用指引”，首屏解释用途、示例和三步体验，
+保留项目流程与切换，折叠次要动态和术语；没有改变服务端 AI 或案例数据模型。
+
+2026-09-10 客户页：以业务问题区分四个案例，先预览再进入项目；手机双列。
+交付流程条与右侧阶段上下文仅在需求分析至 ROI 等流程页显示，不放在客户选择页。
 
 已经实现并可验证：
 
@@ -80,7 +89,8 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 | Real AI 最近完整验收 | 2026-08-19：`real-ai / modelscope / null` + 真实浏览器点击 |
 
 2026-09-02 收口仅更新依赖安全覆盖和文档，没有修改应用行为或重新部署。线上 `010`
-仍对应当前应用代码；旧 Netlify 实验站已经退役。
+未因此包含新的依赖覆盖；应用业务源码未变不能推导线上依赖同样已修复。
+旧 Netlify 实验站已经退役。2026-09-09 未重新核验线上镜像与依赖。
 
 ## 5. 当前维护策略
 

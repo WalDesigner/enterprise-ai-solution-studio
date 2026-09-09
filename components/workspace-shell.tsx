@@ -13,7 +13,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 import { WorkflowStepper } from "@/components/workflow-stepper";
 import { useWorkspaceProject } from "@/components/workspace-provider";
@@ -40,24 +40,27 @@ const navigationItems: Array<{
   label: string;
   href: string;
   icon: typeof LayoutDashboard;
+  description: string;
   soon?: boolean;
 }> = [
-  { key: "dashboard", label: "仪表盘", href: "/", icon: LayoutDashboard },
-  { key: "customers", label: "客户管理", href: "/customers", icon: Users },
-  { key: "analysis", label: "需求分析", href: "/analysis", icon: SearchCheck },
-  { key: "solution", label: "AI方案", href: "/solution", icon: Sparkles },
-  { key: "poc", label: "PoC验证", href: "/poc", icon: ClipboardCheck },
+  { key: "dashboard", label: "使用指引", description: "了解用途与体验路径", href: "/", icon: LayoutDashboard },
+  { key: "customers", label: "客户管理", description: "选择业务案例", href: "/customers", icon: Users },
+  { key: "analysis", label: "需求分析", description: "01 填写问题 · 生成草案", href: "/analysis", icon: SearchCheck },
+  { key: "solution", label: "AI方案", description: "02 查看建议与方案设计", href: "/solution", icon: Sparkles },
+  { key: "poc", label: "PoC验证", description: "03 设计小范围试验", href: "/poc", icon: ClipboardCheck },
   {
     key: "deployment",
     label: "部署规划",
     href: "/deployment",
     icon: ServerCog,
+    description: "04 规划如何上线",
   },
   {
     key: "roi",
     label: "ROI报告",
     href: "/roi",
     icon: FileChartColumn,
+    description: "05 估算成本与收益",
   },
 ];
 
@@ -228,10 +231,11 @@ export function WorkspaceShell({
                 const isActive = item.key === activeNav;
 
                 return (
+                  <Fragment key={item.key}>
+                  {item.key === "analysis" ? <p className="mb-1 mt-4 hidden px-3 text-[11px] font-semibold tracking-wide text-slate-400 lg:block">方案流程 · 按需查看</p> : null}
                   <Link
-                    key={item.key}
                     className={cn(
-                      "flex h-11 shrink-0 snap-start items-center gap-2 rounded-lg px-3 text-left text-sm font-medium transition-colors lg:h-10",
+                      "flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                       isActive
                         ? "bg-slate-950 text-white shadow-sm"
                         : "text-slate-600 hover:bg-slate-100/80 hover:text-slate-950"
@@ -240,6 +244,7 @@ export function WorkspaceShell({
                     aria-current={isActive ? "page" : undefined}
                   >
                     <Icon className="size-4" aria-hidden="true" />
+                    <span>
                     <span className="flex items-center gap-2 whitespace-nowrap">
                       {item.label}
                       {item.soon ? (
@@ -260,24 +265,13 @@ export function WorkspaceShell({
                         </span>
                       ) : null}
                     </span>
+                    <span className={cn("mt-1 hidden text-[11px] font-normal lg:block", isActive ? "text-slate-300" : "text-slate-500")}>{item.description}</span>
+                    </span>
                   </Link>
+                  </Fragment>
                 );
               })}
             </nav>
-
-            <div className="mt-4 hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:block">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-sm font-medium text-slate-900">当前能力</p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    {workspaceContext.capabilityLabel}
-                  </p>
-                </div>
-                <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
-                  {workspaceContext.stageLabel}
-                </span>
-              </div>
-            </div>
 
             <div className="mt-auto hidden rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:block">
               <div className="flex items-center gap-2">
@@ -334,18 +328,18 @@ export function WorkspaceShell({
                 </div>
               </div>
 
-              <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
+              {isWorkflowNavKey(activeNav) ? <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
                 <WorkflowStepper
                   projectStage={activeProject.workflowStage}
                   viewedStage={currentStageKey}
                 />
-              </div>
+              </div> : null}
             </header>
 
-            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_292px] 2xl:grid-cols-[minmax(0,1fr)_304px]">
+            <div className={cn("grid gap-5", isWorkflowNavKey(activeNav) && "xl:grid-cols-[minmax(0,1fr)_292px] 2xl:grid-cols-[minmax(0,1fr)_304px]")}>
               <div className="min-w-0">{children}</div>
 
-              <aside className="h-fit min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-6">
+              {isWorkflowNavKey(activeNav) ? <aside className="h-fit min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-6">
                 <div className="flex items-center justify-between gap-3">
                   <div>
                     <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
@@ -415,7 +409,7 @@ export function WorkspaceShell({
                     切换项目
                   </Link>
                 </div>
-              </aside>
+              </aside> : null}
             </div>
           </div>
         </section>

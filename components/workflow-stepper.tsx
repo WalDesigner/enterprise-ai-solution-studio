@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 type WorkflowStepperProps = {
   projectStage: WorkflowStageKey;
   viewedStage: WorkflowStageKey;
+  autoScroll?: boolean;
 };
 
 function getStageStateLabel({
@@ -44,27 +45,31 @@ function getStageStateLabel({
 export function WorkflowStepper({
   projectStage,
   viewedStage,
+  autoScroll = true,
 }: WorkflowStepperProps) {
   const projectStageIndex = getWorkflowStageIndex(projectStage);
   const viewedStageLabel = getWorkflowStageLabel(viewedStage);
   const projectStageLabel = getWorkflowStageLabel(projectStage);
   const viewedStageRef = useRef<HTMLLIElement | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const activeStage = viewedStageRef.current;
+    const container = scrollContainerRef.current;
 
-    if (!activeStage || window.matchMedia("(min-width: 640px)").matches) {
+    if (!autoScroll || !activeStage || !container || window.matchMedia("(min-width: 640px)").matches) {
       return;
     }
 
-    window.requestAnimationFrame(() => {
-      activeStage.scrollIntoView({
+    const frame = window.requestAnimationFrame(() => {
+      // Center only this horizontal strip; never steal the document's hash scroll.
+      container.scrollTo({
+        left: container.scrollLeft + activeStage.getBoundingClientRect().left - container.getBoundingClientRect().left - (container.clientWidth - activeStage.clientWidth) / 2,
         behavior: "smooth",
-        block: "nearest",
-        inline: "center",
       });
     });
-  }, [viewedStage]);
+    return () => window.cancelAnimationFrame(frame);
+  }, [viewedStage, autoScroll]);
 
   return (
     <section aria-label="企业 AI 咨询交付流程">
@@ -90,7 +95,7 @@ export function WorkflowStepper({
         </p>
       </div>
 
-      <div className="mt-4 overflow-x-auto pb-1">
+      <div ref={scrollContainerRef} className="mt-4 overflow-x-auto pb-1">
         <ol className="grid min-w-[760px] snap-x grid-cols-5 gap-2">
           {workflowStages.map((stage, index) => {
             const isComplete = index < projectStageIndex;
