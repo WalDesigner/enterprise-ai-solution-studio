@@ -516,7 +516,7 @@ function AnalysisWorkspace({
         <div
           aria-busy={isGenerating}
           id="analysis-form"
-          className="flex scroll-mt-6 flex-col gap-5"
+          className="flex scroll-mt-40 flex-col gap-5 lg:scroll-mt-6"
         >
           <div className="flex flex-col gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">

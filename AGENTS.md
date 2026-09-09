@@ -59,7 +59,7 @@ AGENTS.md -> docs/HANDOFF.md -> docs/PROJECT_CONTEXT.md
 ### 架构、路线图、系统审计
 
 读 `MASTER_CONTEXT.md`、本文件、`START_HERE.md`、`OPERATING_SYSTEM.md`、
-`KNOWLEDGE_BASE.md`、`PROJECT_CONTEXT.md` 和相关专题文件。
+`docs/KNOWLEDGE_BASE.md`、`PROJECT_CONTEXT.md` 和相关专题文件。
 
 不要机械读取无关历史，也不能为了省额度跳过明确相关事实源。
 
