@@ -86,7 +86,7 @@ QA_BASE_URL=http://127.0.0.1:3101 npm run qa:browser
 当前套件：
 
 - Unit：10 tests。
-- Browser：23 tests。
+- Browser：25 tests（含紧凑导航与跨客户内容一致性）。
 
 测试数量是代码事实，不应在多个历史文档长期复制；变化后更新本文件和 README 即可。
 

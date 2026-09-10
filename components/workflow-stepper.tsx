@@ -16,6 +16,7 @@ type WorkflowStepperProps = {
   projectStage: WorkflowStageKey;
   viewedStage: WorkflowStageKey;
   autoScroll?: boolean;
+  compact?: boolean;
 };
 
 function getStageStateLabel({
@@ -46,6 +47,7 @@ export function WorkflowStepper({
   projectStage,
   viewedStage,
   autoScroll = true,
+  compact = false,
 }: WorkflowStepperProps) {
   const projectStageIndex = getWorkflowStageIndex(projectStage);
   const viewedStageLabel = getWorkflowStageLabel(viewedStage);
@@ -70,6 +72,26 @@ export function WorkflowStepper({
     });
     return () => window.cancelAnimationFrame(frame);
   }, [viewedStage, autoScroll]);
+
+  if (compact) {
+    return (
+      <nav aria-label="方案流程" className="min-w-0">
+        <div ref={scrollContainerRef} className="overflow-x-auto pb-1">
+          <ol className="grid min-w-[580px] grid-cols-5 gap-1.5">
+            {workflowStages.map((stage, index) => (
+              <li key={stage.key} ref={stage.key === viewedStage ? viewedStageRef : undefined}>
+                <Link href={stage.route} aria-current={stage.key === viewedStage ? "step" : undefined}
+                  className={cn("flex min-h-11 items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition-colors", stage.key === viewedStage ? "bg-slate-900 text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100")}>
+                  <span className={cn("text-xs tabular-nums", stage.key === viewedStage ? "text-teal-300" : "text-slate-400")}>0{index + 1}</span>
+                  {stage.zhLabel}
+                </Link>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <section aria-label="企业 AI 咨询交付流程">

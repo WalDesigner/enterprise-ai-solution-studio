@@ -10,6 +10,47 @@ const routes = [
   { path: "/roi", label: "ROI" },
 ] as const;
 
+test("workflow pages expose one compact stage navigation and one next action", async ({ page }) => {
+  let generationRequests = 0;
+  await page.route("**/api/analysis/generate", async route => { generationRequests += 1; await route.abort(); });
+  for (const path of ["/analysis", "/solution", "/poc", "/deployment", "/roi"]) {
+    await page.goto(path, { waitUntil: "networkidle" });
+    const stages = page.getByRole("navigation", { name: "方案流程", exact: true });
+    await expect(stages.getByRole("link")).toHaveCount(5);
+    await expect(stages.locator('[aria-current="step"]')).toHaveAttribute("href", path);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveCount(1);
+    await expect(page.getByRole("link", { name: "切换客户 →", exact: true })).toHaveAttribute("href", "/customers");
+    expect((await stages.boundingBox())!.height).toBeLessThan(70);
+    if (path === "/analysis") {
+      await expect(page.getByRole("button", { name: "生成AI方案草案", exact: true })).toHaveCount(1);
+    } else {
+      await expect(page.getByRole("region", { name: "下一步", exact: true }).getByRole("link")).toHaveCount(1);
+    }
+  }
+  expect(generationRequests).toBe(0);
+});
+
+test("case-specific plans and ROI remain consistent across customer switches", async ({ page }) => {
+  await page.goto("/roi", { waitUntil: "networkidle" });
+  const firstRoi = await page.getByTestId("roi-summary").innerText();
+  await expect(page.getByRole("button", { name: /下载|生成.*报告/ })).toHaveCount(0);
+  await page.goto("/customers", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: /审批流程协同/ }).click();
+  await page.getByRole("button", { name: "进入PoC 验证", exact: true }).click();
+  const content = page.getByTestId("workflow-content");
+  await expect(content).toContainText("审批");
+  await expect(content).not.toContainText("先验证知识命中率");
+  await page.getByRole("region", { name: "下一步", exact: true }).getByRole("link").click();
+  await expect(page).toHaveURL(/\/deployment$/);
+  await page.getByRole("region", { name: "下一步", exact: true }).getByRole("link").click();
+  await expect(page).toHaveURL(/\/roi$/);
+  await expect(page.getByTestId("roi-summary")).not.toHaveText(firstRoi);
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(page.getByText("北方海工供应链公司", { exact: true }).first()).toBeVisible();
+  await page.getByText("技术风险", { exact: false }).click();
+  await expect(content.getByText(/应对：/).first()).toBeVisible();
+});
+
 test.describe("Enterprise AI Solution Studio browser smoke", () => {
   for (const route of routes) {
     test(`${route.label} route loads without obvious browser errors`, async ({
@@ -144,7 +185,7 @@ test("analysis header remains usable at a narrow desktop width", async ({
   await page.setViewportSize({ width: 1024, height: 768 });
   await page.goto("/analysis", { waitUntil: "networkidle" });
 
-  const backButton = page.getByRole("link", { name: "返回仪表盘" });
+  const backButton = page.getByRole("link", { name: "返回使用指引" });
   await expect(backButton).toBeVisible();
 
   const buttonLayout = await backButton.evaluate((element) => {
@@ -260,6 +301,11 @@ test.describe("mobile interview-link experience", () => {
 
       expect(horizontalOverflow).toBeLessThanOrEqual(1);
       expect(firstNavLink?.height ?? 0).toBeGreaterThanOrEqual(44);
+      const activeNav = page.getByRole("navigation", { name: "主要功能" }).locator('[aria-current="page"]');
+      await expect.poll(() => activeNav.evaluate(element => {
+        const rect = element.getBoundingClientRect();
+        return rect.left >= 0 && rect.right <= window.innerWidth;
+      })).toBe(true);
       expect(pageErrors).toEqual([]);
     });
   }
