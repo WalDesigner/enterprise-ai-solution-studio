@@ -13,12 +13,11 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { Fragment, type ReactNode } from "react";
+import { Fragment, useEffect, useRef, type ReactNode } from "react";
 
 import { WorkflowStepper } from "@/components/workflow-stepper";
 import { useWorkspaceProject } from "@/components/workspace-provider";
 import {
-  getWorkflowStageAction,
   getWorkflowStageLabel,
   PRODUCT_NAME_ZH,
   PRODUCT_TAGLINE_ZH,
@@ -72,15 +71,6 @@ const workflowNavKeys: readonly WorkflowStageKey[] = [
   "roi",
 ];
 
-type WorkspaceCapabilityContext = {
-  capabilityLabel: string;
-  stageLabel: string;
-  statusLabel: string;
-  sourceLabel: string;
-  nextActionLabel: string;
-  nextActionHref: string;
-};
-
 function isWorkflowNavKey(key: WorkspaceNavKey): key is WorkflowStageKey {
   return workflowNavKeys.includes(key as WorkflowStageKey);
 }
@@ -90,79 +80,6 @@ function getWorkspaceStageKey(
   fallbackStage: WorkflowStageKey
 ) {
   return isWorkflowNavKey(activeNav) ? activeNav : fallbackStage;
-}
-
-function getWorkspaceContext(
-  activeNav: WorkspaceNavKey,
-  projectStage: WorkflowStageKey,
-  projectStatus: string,
-  continueHref: string
-): WorkspaceCapabilityContext {
-  switch (activeNav) {
-    case "dashboard":
-      return {
-        capabilityLabel: "项目工作台",
-        stageLabel: getWorkflowStageLabel(projectStage),
-        statusLabel: projectStatus,
-        sourceLabel: "仪表盘 / 项目总览",
-        nextActionLabel: getWorkflowStageAction(projectStage),
-        nextActionHref: continueHref,
-      };
-    case "customers":
-      return {
-        capabilityLabel: "客户管理",
-        stageLabel: "项目选择",
-        statusLabel: "选择客户后进入对应工作流",
-        sourceLabel: "客户管理 / 客户入口",
-        nextActionLabel: "打开当前项目",
-        nextActionHref: continueHref,
-      };
-    case "analysis":
-      return {
-        capabilityLabel: "需求分析",
-        stageLabel: "需求分析",
-        statusLabel: "基于客户背景补全痛点、系统和 AI 落地目标",
-        sourceLabel: "需求分析 / 客户需求输入",
-        nextActionLabel: "填写需求并生成草案",
-        nextActionHref: "/analysis#analysis-form",
-      };
-    case "solution":
-      return {
-        capabilityLabel: "AI方案设计",
-        stageLabel: "AI方案设计",
-        statusLabel: "基于需求分析结果形成售前方案草案",
-        sourceLabel: "AI 方案 / 方案设计器",
-        nextActionLabel: "进入PoC验证",
-        nextActionHref: "/poc",
-      };
-    case "poc":
-      return {
-        capabilityLabel: "PoC验证",
-        stageLabel: "PoC验证",
-        statusLabel: "基于方案设计验证核心场景和成功指标",
-        sourceLabel: "PoC 验证 / 验证计划",
-        nextActionLabel: "进入部署规划",
-        nextActionHref: "/deployment",
-      };
-    case "deployment":
-      return {
-        capabilityLabel: "部署规划",
-        stageLabel: "部署规划",
-        statusLabel: "基于PoC计划形成试点部署路径和安全边界",
-        sourceLabel: "部署规划 / 交付方案",
-        nextActionLabel: "进入ROI评估",
-        nextActionHref: "/roi",
-      };
-    case "roi":
-      return {
-        capabilityLabel: "ROI投资回报评估",
-        stageLabel: "ROI初步评估",
-        statusLabel: "基于需求分析、PoC计划与部署规划生成初版 ROI 假设",
-        sourceLabel: "ROI 报告 / 管理层价值评估",
-        nextActionLabel: "PoC后校准ROI",
-        nextActionHref: "/poc",
-      };
-  }
 }
 
 type WorkspaceShellProps = {
@@ -187,16 +104,24 @@ export function WorkspaceShell({
   children,
 }: WorkspaceShellProps) {
   const { activeProject } = useWorkspaceProject();
+  const navRef = useRef<HTMLElement | null>(null);
+  const activeLinkRef = useRef<HTMLAnchorElement | null>(null);
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 1024px)").matches) return;
+    const frame = window.requestAnimationFrame(() => {
+      const nav = navRef.current;
+      const link = activeLinkRef.current;
+      if (!nav || !link) return;
+      // Scroll only the navigation strip; preserve page and form-anchor position.
+      nav.scrollTo({ left: nav.scrollLeft + link.getBoundingClientRect().left - nav.getBoundingClientRect().left - (nav.clientWidth - link.clientWidth) / 2 });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeNav]);
   const currentStageKey = getWorkspaceStageKey(
     activeNav,
     activeProject.workflowStage
   );
-  const workspaceContext = getWorkspaceContext(
-    activeNav,
-    activeProject.workflowStage,
-    activeProject.projectStatus,
-    activeProject.continueHref
-  );
+
 
   return (
     <main className="min-h-screen bg-[#f7f8fb] text-slate-950">
@@ -218,11 +143,12 @@ export function WorkspaceShell({
                 </div>
               </div>
               <span className="shrink-0 rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-medium text-emerald-700 lg:hidden">
-                {workspaceContext.stageLabel}
+                {isWorkflowNavKey(activeNav) ? getWorkflowStageLabel(activeNav) : "选择与体验"}
               </span>
             </div>
 
             <nav
+              ref={navRef}
               aria-label="主要功能"
               className="-mx-1 mt-2 flex snap-x gap-2 overflow-x-auto px-1 pb-1 lg:mx-0 lg:mt-4 lg:grid lg:grid-cols-1 lg:gap-1.5 lg:overflow-visible lg:px-0 lg:pb-0"
             >
@@ -234,6 +160,7 @@ export function WorkspaceShell({
                   <Fragment key={item.key}>
                   {item.key === "analysis" ? <p className="mb-1 mt-4 hidden px-3 text-[11px] font-semibold tracking-wide text-slate-400 lg:block">方案流程 · 按需查看</p> : null}
                   <Link
+                    ref={isActive ? activeLinkRef : undefined}
                     className={cn(
                       "flex min-h-11 shrink-0 snap-start items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-medium transition-colors",
                       isActive
@@ -290,7 +217,7 @@ export function WorkspaceShell({
         </aside>
 
         <section className="min-w-0 flex-1 px-3 py-4 sm:px-6 sm:py-5 lg:px-6 lg:py-7 2xl:px-8">
-          <div className="mx-auto flex max-w-[1680px] flex-col gap-5">
+          <div className="mx-auto flex max-w-[1320px] flex-col gap-5">
             <header className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
               <div className="border-b border-slate-100 bg-slate-50/70 px-4 py-4 sm:px-6">
                 <div className="flex flex-col gap-4">
@@ -300,7 +227,7 @@ export function WorkspaceShell({
                         <Boxes className="size-3.5" aria-hidden="true" />
                         工作台 / {breadcrumb}
                       </div>
-                      <h1 className="mt-4 text-2xl font-semibold tracking-normal text-slate-950 sm:text-4xl">
+                      <h1 className="mt-4 text-2xl font-semibold tracking-normal text-slate-950 sm:text-3xl">
                         {title}
                       </h1>
                       <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
@@ -308,7 +235,7 @@ export function WorkspaceShell({
                       </p>
                     </div>
 
-                    <div className="flex w-full min-w-0 flex-col items-start gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:w-auto lg:max-w-[520px] lg:justify-end">
+                    <div className="flex w-full min-w-0 flex-wrap items-center gap-2 lg:w-auto lg:max-w-[520px] lg:justify-end">
                       {badge ? (
                         <span className="inline-flex max-w-full min-w-0 items-center gap-2 rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-xs font-medium text-sky-700">
                           <span className="truncate">{badge}</span>
@@ -328,89 +255,19 @@ export function WorkspaceShell({
                 </div>
               </div>
 
-              {isWorkflowNavKey(activeNav) ? <div className="border-t border-slate-100 bg-white px-4 py-4 sm:px-6">
-                <WorkflowStepper
+              {isWorkflowNavKey(activeNav) ? <div className="border-t border-slate-100 bg-white px-4 py-3 sm:px-6">
+                <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <p className="text-slate-600">当前客户 <strong className="ml-2 font-semibold text-slate-900">{activeProject.customerName}</strong></p>
+                  <Link href="/customers" className="rounded-md px-2 py-1 font-medium text-teal-700 hover:bg-teal-50">切换客户 →</Link>
+                </div>
+                <WorkflowStepper compact
                   projectStage={activeProject.workflowStage}
                   viewedStage={currentStageKey}
                 />
               </div> : null}
             </header>
 
-            <div className={cn("grid gap-5", isWorkflowNavKey(activeNav) && "xl:grid-cols-[minmax(0,1fr)_292px] 2xl:grid-cols-[minmax(0,1fr)_304px]")}>
-              <div className="min-w-0">{children}</div>
-
-              {isWorkflowNavKey(activeNav) ? <aside className="h-fit min-w-0 rounded-2xl border border-slate-200/80 bg-white p-4 shadow-sm xl:sticky xl:top-6">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
-                      项目上下文
-                    </p>
-                    <h2 className="mt-1 text-sm font-semibold text-slate-950">
-                      {workspaceContext.capabilityLabel}
-                    </h2>
-                  </div>
-                  <span className="rounded-full border border-slate-900 bg-slate-950 px-2 py-0.5 text-[10px] font-medium text-white">
-                    当前
-                  </span>
-                </div>
-
-                <div className="mt-4 rounded-xl bg-slate-950 p-4 text-white">
-                  <p className="text-xs font-medium text-slate-400">当前客户</p>
-                  <p className="mt-1 text-sm font-semibold leading-5">
-                    {activeProject.customerName}
-                  </p>
-                  <p className="mt-2 text-xs leading-5 text-slate-300">
-                    {activeProject.projectName}
-                  </p>
-                </div>
-
-                <dl className="mt-4 divide-y divide-slate-200 border-y border-slate-200">
-                  {[
-                    ["当前页面能力", workspaceContext.stageLabel],
-                    [
-                      "项目当前阶段",
-                      getWorkflowStageLabel(activeProject.workflowStage),
-                    ],
-                    ["页面任务", workspaceContext.statusLabel],
-                    ["项目状态", activeProject.projectStatus],
-                    ["负责人", activeProject.owner],
-                    ["数据属性", activeProject.lastUpdated],
-                    ["来源 / 入口", workspaceContext.sourceLabel],
-                  ].map(([label, value]) => (
-                    <div key={label} className="grid gap-1 py-3">
-                      <dt className="text-[11px] font-medium text-slate-400">
-                        {label}
-                      </dt>
-                      <dd className="text-sm font-medium leading-5 text-slate-900">
-                        {value}
-                      </dd>
-                    </div>
-                  ))}
-                </dl>
-
-                <div className="mt-4 rounded-xl border border-sky-200 bg-sky-50 p-3">
-                  <p className="text-xs font-medium text-sky-700">下一步建议</p>
-                  <p className="mt-1 text-sm font-semibold leading-5 text-sky-950">
-                    {workspaceContext.nextActionLabel}
-                  </p>
-                </div>
-
-                <div className="mt-4 space-y-2.5">
-                  <Link
-                    className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-slate-950 px-4 text-sm font-medium text-white shadow-sm transition-colors hover:bg-slate-800"
-                    href={workspaceContext.nextActionHref}
-                  >
-                    {workspaceContext.nextActionLabel}
-                  </Link>
-                  <Link
-                    className="inline-flex h-10 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 hover:text-slate-950"
-                    href="/customers"
-                  >
-                    切换项目
-                  </Link>
-                </div>
-              </aside> : null}
-            </div>
+            <div className="min-w-0" data-testid="workflow-content">{children}</div>
           </div>
         </section>
       </div>

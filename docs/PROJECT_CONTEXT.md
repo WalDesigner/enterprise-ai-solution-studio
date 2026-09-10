@@ -46,7 +46,7 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 
 - `lib/current-project.ts` 提供脱敏演示项目；当前项目和 Analysis 草案按项目保存到
   `localStorage`。
-- 当前本地分支：Next.js 16.3.4、React 19、TypeScript、Tailwind CSS 4、App Router；未据此更新线上镜像。
+- 当前本地分支：Next.js 16.3.4、React 19、TypeScript、Tailwind CSS 4、App Router；依赖补丁已随 011 发布；后续前端增量以部署交接为准。
 - Node.js 22 standalone Docker 容器运行于 CloudBase Run。
 - 单元测试、lint、production build 和 Playwright Browser QA 构成当前质量门。
 - 国内 CloudBase 主站是唯一推荐的公网演示入口。
@@ -57,7 +57,8 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 保留项目流程与切换，折叠次要动态和术语；没有改变服务端 AI 或案例数据模型。
 
 2026-09-10 客户页：以业务问题区分四个案例，先预览再进入项目；手机双列。
-交付流程条与右侧阶段上下文仅在需求分析至 ROI 等流程页显示，不放在客户选择页。
+客户选择页不放交付流程条。后续整站前端优化将五个流程页统一为紧凑步骤导航、客户条、
+单一正文与下一步入口，取消重复右侧上下文；AI 草案与案例规划保持明确分区。
 
 已经实现并可验证：
 
@@ -84,13 +85,13 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 | 公开仓库 | `https://github.com/WalDesigner/enterprise-ai-solution-studio` |
 | 可见性 / 分支 | Public / `main` |
 | 稳定标记 | `interview-ready-2026-09` |
-| 国内线上版本 | CloudBase `010` |
+| 国内已核验版本 | CloudBase `011`，来源 `51056d2`，2026-09-10 控制面正常 / 100% |
 | 国内路由最近复查 | 2026-08-20：首页与 `/analysis` HTTP 200 |
 | Real AI 最近完整验收 | 2026-08-19：`real-ai / modelscope / null` + 真实浏览器点击 |
 
-2026-09-02 收口仅更新依赖安全覆盖和文档，没有修改应用行为或重新部署。线上 `010`
-未因此包含新的依赖覆盖；应用业务源码未变不能推导线上依赖同样已修复。
-旧 Netlify 实验站已经退役。2026-09-09 未重新核验线上镜像与依赖。
+2026-09-10 发布的 011 包含依赖补丁、首页使用指引与客户管理优化。
+整站流程页的新一轮优化不能据此称为已经上线，最新发布记录见部署交接。
+旧 Netlify 实验站已经退役；历史 Real AI 验收不等于最新版本已重新执行模型测试。
 
 ## 5. 当前维护策略
 

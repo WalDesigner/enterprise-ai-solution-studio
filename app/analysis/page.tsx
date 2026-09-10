@@ -1,15 +1,8 @@
 "use client";
 
 import {
-  ArrowRight,
-  BrainCircuit,
-  CheckCircle2,
-  ClipboardList,
-  Database,
   LoaderCircle,
-  Network,
   Save,
-  Target,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -127,28 +120,7 @@ function buildFormSections(project: {
   ] as const;
 }
 
-const opportunities = [
-  {
-    title: "可自动化流程",
-    description: "适合先梳理重复查询、工单分流、线索评分等高频流程。",
-    icon: ClipboardList,
-  },
-  {
-    title: "可构建知识库",
-    description: "可将产品手册、历史工单、销售材料沉淀为 RAG 知识源。",
-    icon: Database,
-  },
-  {
-    title: "可引入Agent工作流",
-    description: "适合连接 CRM、工单系统、消息工具和人工审批节点。",
-    icon: Network,
-  },
-  {
-    title: "可做ROI评估",
-    description: "可围绕人效提升、响应时长、转化率和返工率建立指标。",
-    icon: BrainCircuit,
-  },
-];
+
 
 const providerLabels: Record<AiProvider, string> = {
   openai: "OpenAI",
@@ -416,103 +388,13 @@ function AnalysisWorkspace({
     <WorkspaceShell
       activeNav="analysis"
       breadcrumb="需求分析 / 售前调研"
-      title="AI 需求分析模块"
-      subtitle="将客户背景、现有系统、数据基础和落地目标整理为可沟通的售前输入，为后续 AI 方案、PoC 范围和 ROI 评估打基础。"
-      badge={`当前项目：${activeProject.projectName}`}
+      title="把业务问题写清楚"
+      subtitle="先确认下面的示例需求，再生成 AI 方案草案。你也可以修改输入，比较不同需求下的建议。"
+      badge="01 / 需求分析"
       backHref="/"
-      backLabel="返回仪表盘"
+      backLabel="返回使用指引"
     >
       <div className="flex min-w-0 flex-col gap-5">
-        <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-          <div className="grid min-w-0 lg:grid-cols-[minmax(0,1fr)_340px]">
-            <div className="min-w-0 p-5 sm:p-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600">
-                <Target className="size-3.5" aria-hidden="true" />
-                咨询判断
-              </div>
-              <h2 className="mt-4 max-w-3xl text-2xl font-semibold tracking-normal text-slate-950">
-                当前客户主要问题集中在售后知识分散、重复咨询高、跨部门响应慢。
-              </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-                建议优先进入 AI 知识库 + Agent 分流 PoC 验证，用高频售后问题、历史工单和销售线索数据先证明业务价值，再扩大到部署规划与 ROI 汇报。
-              </p>
-
-              <div className="mt-5 grid gap-3 md:grid-cols-3">
-                {activeProject.painPoints.map((item) => (
-                  <div
-                    key={item}
-                    className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3"
-                  >
-                    <div className="flex gap-2">
-                      <CheckCircle2
-                        className="mt-0.5 size-4 shrink-0 text-emerald-600"
-                        aria-hidden="true"
-                      />
-                      <p className="text-sm font-medium leading-6 text-slate-800">
-                        {item}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <aside className="border-t border-slate-200 bg-slate-950 p-5 text-white sm:p-6 lg:border-l lg:border-t-0">
-              <div className="flex items-center gap-2 text-sm font-medium text-slate-300">
-                <BrainCircuit className="size-4" aria-hidden="true" />
-                推荐下一步
-              </div>
-              <h3 className="mt-4 text-xl font-semibold tracking-normal">
-                先生成 AI 方案草案
-              </h3>
-              <p className="mt-3 text-sm leading-6 text-slate-300">
-                当前输入已经足够支撑售前方案初稿。配置 ModelScope、OpenRouter、Gemini、Groq 或 OpenAI 模型服务后可生成真实 AI 咨询草案；未配置时自动使用模拟兜底。
-              </p>
-              <button
-                aria-describedby={isGenerating ? "generation-help" : undefined}
-                className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-lg bg-white px-4 text-sm font-medium text-slate-950 transition-colors hover:bg-slate-200 disabled:cursor-wait disabled:opacity-90"
-                disabled={isGenerating}
-                onClick={generateDraft}
-                type="button"
-              >
-                {isGenerating ? (
-                  <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <ArrowRight className="size-4" aria-hidden="true" />
-                )}
-                {isGenerating
-                  ? `AI 生成中 · ${generationSeconds}s`
-                  : "生成AI方案草案"}
-              </button>
-            </aside>
-          </div>
-
-          <div className="grid border-t border-slate-100 bg-slate-50/70 md:grid-cols-4">
-            {opportunities.map((item) => {
-              const Icon = item.icon;
-
-              return (
-                <div
-                  key={item.title}
-                  className="min-w-0 border-b border-slate-100 p-4 last:border-b-0 md:border-b-0 md:border-r md:last:border-r-0"
-                >
-                  <div className="flex items-center gap-2">
-                    <div className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-white text-slate-700 shadow-sm">
-                      <Icon className="size-4" aria-hidden="true" />
-                    </div>
-                    <h3 className="text-sm font-semibold text-slate-950">
-                      {item.title}
-                    </h3>
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-slate-500">
-                    {item.description}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-
         <div
           aria-busy={isGenerating}
           id="analysis-form"
@@ -530,7 +412,7 @@ function AnalysisWorkspace({
                 <p className="text-xs leading-5 text-emerald-700">
                   {lastSavedAt
                     ? `已保存于 ${new Date(lastSavedAt).toLocaleTimeString("zh-CN", { hour: "2-digit", minute: "2-digit" })}，刷新或切换页面后仍可继续。`
-                    : "输入内容将保存到当前浏览器，不上传客户数据。"}
+                    : "输入自动保存在当前浏览器；点击生成后，需求会发送给模型服务。请勿填入敏感数据。"}
                 </p>
               </div>
             </div>
@@ -586,7 +468,7 @@ function AnalysisWorkspace({
                   下一步：生成 AI 方案草案
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  有可用模型服务 key 时调用服务端真实 AI 生成；未配置或调用失败时自动使用模拟兜底，保证公开 Demo 可用。
+                  生成后可查看建议并进入 AI 方案。若模型不可用，会明确标记为模拟结果。
                 </p>
               </div>
               <Button
