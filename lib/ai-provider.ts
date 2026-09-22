@@ -13,6 +13,7 @@ import {
   REQUIRED_SECTION_TITLES,
 } from "@/lib/ai-draft-parser";
 import { fetchWithRetry } from "@/lib/provider-fetch";
+import { resolveModelScopeModel, readProviderFailure, providerFailureHints } from "@/lib/provider-policy";
 
 type GenerateAnalysisDraftInput = {
   formState: AnalysisFormInput;
@@ -59,8 +60,6 @@ const DEFAULT_OPENAI_MODEL = "gpt-5.5-mini";
 const DEFAULT_OPENROUTER_MODEL = "openrouter/free";
 const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
 const DEFAULT_GROQ_MODEL = "llama-3.1-8b-instant";
-const DEFAULT_MODELSCOPE_MODEL = "Qwen/Qwen3-30B-A3B-Instruct-2507";
-const LEGACY_MODELSCOPE_MODEL = "Qwen/Qwen3-235B-A22B-Instruct-2507";
 const PROVIDER_TIMEOUT_MS = 30_000;
 const MODELSCOPE_MAX_ATTEMPTS = 2;
 const MODELSCOPE_RETRY_DELAY_MS = 350;
@@ -172,12 +171,8 @@ function modelForProvider(provider: AiProvider) {
       return process.env.GEMINI_MODEL ?? DEFAULT_GEMINI_MODEL;
     case "groq":
       return process.env.GROQ_MODEL ?? DEFAULT_GROQ_MODEL;
-    case "modelscope": {
-      const configuredModel = process.env.MODELSCOPE_MODEL;
-      return !configuredModel || configuredModel === LEGACY_MODELSCOPE_MODEL
-        ? DEFAULT_MODELSCOPE_MODEL
-        : configuredModel;
-    }
+    case "modelscope":
+      return resolveModelScopeModel(process.env.MODELSCOPE_MODEL);
     case "mock":
       return "mock";
   }
@@ -341,7 +336,7 @@ async function callChatProvider(
           },
         ],
         ...(provider === "modelscope"
-          ? {}
+          ? { enable_thinking: false }
           : { response_format: { type: "json_object" } }),
         temperature: 0.2,
         max_tokens: provider === "modelscope" ? 1600 : 1800,
@@ -357,7 +352,7 @@ async function callChatProvider(
   if (!response.ok) {
     return {
       text: "",
-      errorCategory: errorCategoryFromStatus(response.status),
+      errorCategory: await readProviderFailure(response),
       status: response.status,
     };
   }
@@ -452,7 +447,7 @@ export async function generateAnalysisDraft(
         input,
         provider,
         result.errorCategory,
-        `${provider} 模型服务返回 ${result.status}，已自动切换为模拟兜底。`
+        `${provider} 模型服务返回 ${result.status}。${providerFailureHints[result.errorCategory as keyof typeof providerFailureHints] ?? "模型调用失败。"}本次为模拟示例，不是真实 AI 结果。`
       );
     }
 

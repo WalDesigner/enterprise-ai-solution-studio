@@ -2,7 +2,7 @@
 
 > 文档类型：当前产品事实源
 > 状态：当前有效
-> 最后复核：2026-09-11（Asia/Shanghai）
+> 最后复核：2026-09-22（Asia/Shanghai）
 > 说明：部署细节归 `DEPLOYMENT_HANDOFF.md`，会话增量归 `HANDOFF.md`。
 
 ## 1. 当前阶段
@@ -35,6 +35,8 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 - Dashboard、客户切换、当前项目和工作流阶段共享同一套语义。
 
 ### 真实 AI vertical slice
+
+当前故障例外：9 月 21 日生产 ModelScope 返回 HTTP 400，模拟降级。本地模型适配修复已实际生成成功，但未提交或发布；当前操作状态以 `HANDOFF.md` 为准，以下实现能力不等同于线上健康保证。
 
 - Analysis 通过 `/api/analysis/generate` 调用服务端 Provider Adapter。
 - 国内主路径使用 ModelScope；代码级备选包括 OpenRouter、Gemini、Groq 和 OpenAI。

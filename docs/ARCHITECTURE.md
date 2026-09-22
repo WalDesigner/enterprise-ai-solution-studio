@@ -143,8 +143,10 @@ Analysis form + active project context
 ### Provider 策略
 
 - `AI_PROVIDER` 必须显式选择；未配置时使用 Mock。
-- ModelScope 是国内主路径，默认 30B 模型。
-- 已知旧 235B 配置会在运行时迁移到当前 30B 默认值。
+- ModelScope 是国内主路径；当前修复源码默认 `Qwen/Qwen3.5-35B-A3B`，关闭思考输出以控制等待时间。上线状态以 `HANDOFF.md` 为准。
+- 已知旧 235B / 30B 默认配置在运行时迁移到该默认值；其他显式模型配置保留。模型可用目录会独立于本项目发布变化，不能承诺永久免费或永不下线。
+- `lib/provider-policy.ts` 安全归类上游失败，只返回固定类别与提示，不暴露上游错误正文；区分额度、限流、认证、参数和模型不可用。
+- `lib/analysis-request-error.ts` 区分应用入口 HTTP 错误，避免把本地限流误报网络故障。模拟草案使用黄色失败提示，不计为真实生成成功。
 - OpenRouter、Gemini、Groq、OpenAI 是代码级备选。
 - Provider 总调用窗口是 30 秒。
 - 只有 ModelScope 使用最多 2 次总尝试、350ms 间隔的瞬时失败重试。

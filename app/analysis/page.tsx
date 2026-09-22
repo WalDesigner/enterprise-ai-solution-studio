@@ -10,6 +10,7 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { useWorkspaceProject } from "@/components/workspace-provider";
+import { analysisRequestFailure } from "@/lib/analysis-request-error";
 import {
   createMockSolutionDraft,
   type AiErrorCategory,
@@ -135,6 +136,9 @@ const errorCategoryLabels: Record<Exclude<AiErrorCategory, null>, string> = {
   missing_key: "缺少 API key",
   unauthorized: "认证失败",
   model_unavailable: "模型不可用",
+  invalid_request: "模型请求参数不兼容",
+  rate_limited: "请求频率受限",
+  quota_exhausted: "模型额度不足",
   provider_error: "模型服务错误",
   timeout: "服务超时",
   network_error: "网络错误",
@@ -308,6 +312,7 @@ function AnalysisWorkspace({
   };
 
   const generateDraft = async () => {
+    let requestFailure: ReturnType<typeof analysisRequestFailure> | undefined;
     setIsGenerating(true);
     setShowDraft(false);
     setGenerationSeconds(0);
@@ -333,6 +338,7 @@ function AnalysisWorkspace({
       });
 
       if (!response.ok) {
+        requestFailure = analysisRequestFailure(response.status);
         throw new Error("AI generation request failed.");
       }
 
@@ -356,12 +362,13 @@ function AnalysisWorkspace({
     } catch {
       const fallbackDraft = createMockSolutionDraft(formState, projectContext);
       const fallbackNote =
-        "AI 生成请求失败，已自动使用模拟兜底，公开 Demo 仍可继续演示。";
+        requestFailure?.note ?? "未能获取有效的 AI 响应，请检查连接后重试。本次为模拟示例，不是真实 AI 结果。";
+      const fallbackCategory = requestFailure?.category ?? "network_error";
 
       setDraft(fallbackDraft);
       setDraftSource("mock-fallback");
       setDraftProvider("mock");
-      setDraftErrorCategory("network_error");
+      setDraftErrorCategory(fallbackCategory);
       setDraftNote(fallbackNote);
       setShowDraft(true);
       saveAnalysisSession(activeProject.id, {
@@ -369,7 +376,7 @@ function AnalysisWorkspace({
         draft: fallbackDraft,
         draftSource: "mock-fallback",
         draftProvider: "mock",
-        draftErrorCategory: "network_error",
+        draftErrorCategory: fallbackCategory,
         draftNote: fallbackNote,
       });
       setLastSavedAt(new Date().toISOString());
@@ -490,14 +497,14 @@ function AnalysisWorkspace({
           {showDraft ? (
             <section
               ref={draftRef}
-              className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm"
+              className="scroll-mt-40 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:scroll-mt-6"
             >
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
-                <div className="rounded-2xl border border-emerald-200 bg-emerald-50/80 p-4">
+                <div className={`rounded-2xl border p-4 ${draftSource === "real-ai" ? "border-emerald-200 bg-emerald-50/80" : "border-amber-300 bg-amber-50/80"}`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <div className="inline-flex items-center gap-2 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-emerald-700 shadow-sm">
-                        AI方案草案已生成
+                      <div className={`inline-flex items-center gap-2 rounded-full bg-white px-2.5 py-1 text-xs font-semibold shadow-sm ${draftSource === "real-ai" ? "text-emerald-700" : "text-amber-800"}`}>
+                        {draftSource === "real-ai" ? "AI方案草案已生成" : "真实 AI 生成未成功 · 以下为模拟示例"}
                       </div>
                       <h2 className="mt-3 text-base font-semibold text-slate-950">
                         {draft?.title ?? "AI方案草案"}
@@ -510,7 +517,7 @@ function AnalysisWorkspace({
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <span className="w-fit rounded-full border border-emerald-200 bg-white px-2.5 py-1 text-xs font-medium text-emerald-700 shadow-sm">
+                      <span className={`w-fit rounded-full border bg-white px-2.5 py-1 text-xs font-medium shadow-sm ${draftSource === "real-ai" ? "border-emerald-200 text-emerald-700" : "border-amber-300 text-amber-800"}`}>
                         {draftSource === "real-ai"
                           ? "真实 AI 生成"
                           : "模拟兜底"}
