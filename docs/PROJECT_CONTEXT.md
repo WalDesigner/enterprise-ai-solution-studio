@@ -2,7 +2,7 @@
 
 > 文档类型：当前产品事实源
 > 状态：当前有效
-> 最后复核：2026-09-22（Asia/Shanghai）
+> 最后复核：2026-09-23（Asia/Shanghai）
 > 说明：部署细节归 `DEPLOYMENT_HANDOFF.md`，会话增量归 `HANDOFF.md`。
 
 ## 1. 当前阶段
@@ -36,7 +36,7 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 
 ### 真实 AI vertical slice
 
-当前故障例外：9 月 21 日生产 ModelScope 返回 HTTP 400，模拟降级。本地模型适配修复已实际生成成功，但未提交或发布；当前操作状态以 `HANDOFF.md` 为准，以下实现能力不等同于线上健康保证。
+9 月 21 日生产 ModelScope 返回 HTTP 400，模拟降级；修复源码 `b794c53` 已发布为 013。9 月 23 日公网实际点击生成通过，以下能力仍不代表第三方模型永久可用；详细证据见 `HANDOFF.md`。
 
 - Analysis 通过 `/api/analysis/generate` 调用服务端 Provider Adapter。
 - 国内主路径使用 ModelScope；代码级备选包括 OpenRouter、Gemini、Groq 和 OpenAI。
@@ -87,9 +87,9 @@ Dashboard -> Customers -> Analysis -> Solution -> PoC -> Deployment -> ROI
 | 公开仓库 | `https://github.com/WalDesigner/enterprise-ai-solution-studio` |
 | 可见性 / 分支 | Public / `main` |
 | 稳定标记 | `interview-ready-2026-09` |
-| 国内已核验版本 | CloudBase `012`，来源 `9e22a97`，2026-09-11 正常 / 100% |
-| 国内路由最近复查 | 2026-09-11：七条页面路由及实际客户切换通过；首次访问有平台测试域名提示 |
-| Real AI 最近完整验收 | 2026-08-19：`real-ai / modelscope / null` + 真实浏览器点击 |
+| 国内已核验版本 | CloudBase `013`，来源 `b794c53`，2026-09-23 正常 / 100% |
+| 国内路由最近复查 | 2026-09-23：首页与分析页200；七路由及客户切换完整回归为9月11日，未重复全量公网验收 |
+| Real AI 最近验收 | 2026-09-23：公网实际点击，真实 AI / ModelScope、六章节、无错误标签；本次未单独抓取原始 JSON |
 
 2026-09-10 发布的 011 包含依赖补丁、首页使用指引与客户管理优化。
 2026-09-11 整站流程页优化随 012 发布，最新验收及平台提示边界见部署交接。
