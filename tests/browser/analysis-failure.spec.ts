@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 
 for (const width of [1440, 390]) {
-  test(`HTTP rate limit remains visibly unsuccessful after refresh at ${width}px`, async ({ page }) => {
+  test(`HTTP rate limit creates no simulated draft at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 1000 });
     // Never contact the real provider from regression tests.
     await page.route("**/api/analysis/generate", route => route.fulfill({
@@ -9,18 +9,20 @@ for (const width of [1440, 390]) {
     }));
     await page.goto("/analysis", { waitUntil: "networkidle" });
     await page.getByRole("button", { name: "生成AI方案草案", exact: true }).click();
-    await expect(page.getByText("真实 AI 生成未成功 · 以下为模拟示例", { exact: true })).toBeVisible();
-    await expect(page.getByText("请求频率受限", { exact: true })).toBeVisible();
+    const failureAlert = page.getByRole("alert").filter({ hasText: "本次真实 AI 生成失败" });
+    await expect(failureAlert).toContainText("本次真实 AI 生成失败");
+    await expect(failureAlert).toContainText("请求频率受限");
     await expect(page.getByText("AI方案草案已生成", { exact: true })).toHaveCount(0);
-    await page.reload({ waitUntil: "networkidle" });
-    await expect(page.getByText("真实 AI 生成未成功 · 以下为模拟示例", { exact: true })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth)).toBeLessThanOrEqual(1);
-    const failureHeading = page.getByText("真实 AI 生成未成功 · 以下为模拟示例", { exact: true });
+    const failureHeading = page.getByText("本次真实 AI 生成失败", { exact: true });
     await expect.poll(async () => {
       const box = await failureHeading.boundingBox();
       return Boolean(box && box.y >= (width < 1024 ? 144 : 0) && box.y + box.height < 1000);
     }).toBe(true);
     await page.screenshot({ path: `test-results/analysis-failure-${width}.png` });
+    await page.reload({ waitUntil: "networkidle" });
+    await expect(page.getByText("模拟兜底", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("AI方案草案已生成", { exact: true })).toHaveCount(0);
   });
 }
 
@@ -34,7 +36,22 @@ test("upstream quota fallback cannot be presented as real AI success", async ({ 
   }));
   await page.goto("/analysis", { waitUntil: "networkidle" });
   await page.getByRole("button", { name: "生成AI方案草案", exact: true }).click();
-  await expect(page.getByText("真实 AI 生成未成功 · 以下为模拟示例", { exact: true })).toBeVisible();
-  await expect(page.getByText("模型额度不足", { exact: true })).toBeVisible();
+  await expect(page.getByRole("alert").filter({ hasText: "本次真实 AI 生成失败" })).toContainText("模型额度不足");
+  await expect(page.getByText("模拟方案", { exact: true })).toHaveCount(0);
   await expect(page.getByText("真实 AI 生成", { exact: true })).toHaveCount(0);
+});
+
+test("provider authorization failure does not create a draft", async ({ page }) => {
+  await page.route("**/api/analysis/generate", route => route.fulfill({
+    status: 503, contentType: "application/json", body: JSON.stringify({
+      source: "unavailable", provider: "modelscope", errorCategory: "unauthorized", draft: null,
+      note: "Authentication failed",
+    }),
+  }));
+  await page.goto("/analysis", { waitUntil: "networkidle" });
+  await page.getByRole("button", { name: "生成AI方案草案", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "本次真实 AI 生成失败" })).toContainText("认证或权限失败");
+  await expect(page.getByText("真实 AI 生成", { exact: true })).toHaveCount(0);
+  await page.reload({waitUntil: "networkidle"});
+  await expect(page.getByText("模拟兜底", { exact: true })).toHaveCount(0);
 });

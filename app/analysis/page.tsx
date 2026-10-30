@@ -11,8 +11,9 @@ import { Button } from "@/components/ui/button";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { useWorkspaceProject } from "@/components/workspace-provider";
 import { analysisRequestFailure } from "@/lib/analysis-request-error";
+import { parseAiDraft } from "@/lib/ai-draft-parser";
+import { providerFailureHints } from "@/lib/provider-policy";
 import {
-  createMockSolutionDraft,
   type AiErrorCategory,
   type AiGenerationSource,
   type AiProvider,
@@ -198,6 +199,8 @@ function AnalysisWorkspace({
   const [draftErrorCategory, setDraftErrorCategory] =
     useState<AiErrorCategory>(null);
   const [draftNote, setDraftNote] = useState("");
+  const [generationFailure, setGenerationFailure] = useState<{ category: AiErrorCategory; note: string } | null>(null);
+  const [isRestoredDraft, setIsRestoredDraft] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationSeconds, setGenerationSeconds] = useState(0);
   const [formState, setFormState] = useState(() =>
@@ -205,6 +208,7 @@ function AnalysisWorkspace({
   );
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const draftRef = useRef<HTMLElement | null>(null);
+  const failureRef = useRef<HTMLDivElement | null>(null);
   const didHydrateSessionRef = useRef(false);
   const skipNextSaveRef = useRef(false);
   const generationTimerRef = useRef<number | null>(null);
@@ -227,6 +231,7 @@ function AnalysisWorkspace({
         setDraftProvider(storedSession.draftProvider);
         setDraftErrorCategory(storedSession.draftErrorCategory);
         setDraftNote(storedSession.draftNote);
+        setIsRestoredDraft(Boolean(storedSession.draft));
         setShowDraft(Boolean(storedSession.draft));
         setLastSavedAt(storedSession.updatedAt);
       });
@@ -269,6 +274,10 @@ function AnalysisWorkspace({
   ]);
 
   useEffect(() => {
+    if (generationFailure) failureRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [generationFailure]);
+
+  useEffect(() => {
     if (!showDraft || !draft) {
       return;
     }
@@ -306,15 +315,17 @@ function AnalysisWorkspace({
     setDraftProvider(null);
     setDraftErrorCategory(null);
     setDraftNote("");
+    setGenerationFailure(null);
+    setIsRestoredDraft(false);
     setShowDraft(false);
     setLastSavedAt(null);
     skipNextSaveRef.current = true;
   };
 
   const generateDraft = async () => {
-    let requestFailure: ReturnType<typeof analysisRequestFailure> | undefined;
+    let requestFailure: { category: AiErrorCategory; note: string } | undefined;
     setIsGenerating(true);
-    setShowDraft(false);
+    setGenerationFailure(null);
     setGenerationSeconds(0);
 
     if (generationTimerRef.current) {
@@ -328,6 +339,7 @@ function AnalysisWorkspace({
     try {
       const response = await fetch("/api/analysis/generate", {
         method: "POST",
+        signal: AbortSignal.timeout(40_000),
         headers: {
           "Content-Type": "application/json",
         },
@@ -337,22 +349,34 @@ function AnalysisWorkspace({
         }),
       });
 
-      if (!response.ok) {
-        requestFailure = analysisRequestFailure(response.status);
+      const result = await response.json().catch(() => null) as GenerateSolutionDraftResponse | null;
+      if (!response.ok || result?.source !== "real-ai" || result.errorCategory !== null) {
+        const category = result?.errorCategory;
+        const knownCategory = category && Object.hasOwn(errorCategoryLabels, category) ? category : null;
+        requestFailure = knownCategory ? {
+          category: knownCategory,
+          note: providerFailureHints[knownCategory as keyof typeof providerFailureHints]
+            ?? "真实 AI 暂不可用，请维护者检查模型配置或稍后重试。",
+        } : analysisRequestFailure(response.status);
         throw new Error("AI generation request failed.");
       }
 
-      const result = (await response.json()) as GenerateSolutionDraftResponse;
+      const parsedDraft = parseAiDraft(JSON.stringify(result.draft));
+      if (!parsedDraft) {
+        requestFailure = { category: "provider_error", note: "AI 返回内容不完整，请稍后重试。" };
+        throw new Error("Invalid AI draft.");
+      }
 
-      setDraft(result.draft);
+      setDraft(parsedDraft);
       setDraftSource(result.source);
       setDraftProvider(result.provider);
       setDraftErrorCategory(result.errorCategory);
       setDraftNote(result.note);
+      setIsRestoredDraft(false);
       setShowDraft(true);
       saveAnalysisSession(activeProject.id, {
         formState,
-        draft: result.draft,
+        draft: parsedDraft,
         draftSource: result.source,
         draftProvider: result.provider,
         draftErrorCategory: result.errorCategory,
@@ -360,26 +384,10 @@ function AnalysisWorkspace({
       });
       setLastSavedAt(new Date().toISOString());
     } catch {
-      const fallbackDraft = createMockSolutionDraft(formState, projectContext);
-      const fallbackNote =
-        requestFailure?.note ?? "未能获取有效的 AI 响应，请检查连接后重试。本次为模拟示例，不是真实 AI 结果。";
-      const fallbackCategory = requestFailure?.category ?? "network_error";
-
-      setDraft(fallbackDraft);
-      setDraftSource("mock-fallback");
-      setDraftProvider("mock");
-      setDraftErrorCategory(fallbackCategory);
-      setDraftNote(fallbackNote);
-      setShowDraft(true);
-      saveAnalysisSession(activeProject.id, {
-        formState,
-        draft: fallbackDraft,
-        draftSource: "mock-fallback",
-        draftProvider: "mock",
-        draftErrorCategory: fallbackCategory,
-        draftNote: fallbackNote,
+      setGenerationFailure(requestFailure ?? {
+        category: "network_error",
+        note: "未能获取有效的 AI 响应，请检查连接后重试。",
       });
-      setLastSavedAt(new Date().toISOString());
     } finally {
       if (generationTimerRef.current) {
         window.clearInterval(generationTimerRef.current);
@@ -475,7 +483,7 @@ function AnalysisWorkspace({
                   下一步：生成 AI 方案草案
                 </h2>
                 <p className="mt-1 text-sm text-slate-500">
-                  生成后可查看建议并进入 AI 方案。若模型不可用，会明确标记为模拟结果。
+                  仅在真实 AI 生成成功后保存方案。调用失败会说明原因，不自动替换为模拟结果。
                 </p>
               </div>
               <Button
@@ -494,12 +502,21 @@ function AnalysisWorkspace({
             </div>
           </div>
 
+          {generationFailure ? (
+            <div ref={failureRef} role="alert" className="scroll-mt-40 rounded-2xl border border-amber-300 bg-amber-50 p-5 text-amber-950 lg:scroll-mt-6">
+              <h2 className="font-semibold">本次真实 AI 生成失败</h2>
+              <p className="mt-2 text-sm">{generationFailure.category ? errorCategoryLabels[generationFailure.category] : "生成失败"}：{generationFailure.note}</p>
+              <p className="mt-2 text-sm">没有生成或保存模拟方案。{draft ? "下方保留的是先前保存的结果，不是本次生成结果。" : "请处理上述问题后重新点击生成。"}</p>
+            </div>
+          ) : null}
+
           {showDraft ? (
             <section
               ref={draftRef}
               className="scroll-mt-40 overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm lg:scroll-mt-6"
             >
               <div className="border-b border-slate-100 bg-slate-50/70 px-5 py-4 sm:px-6">
+                {isRestoredDraft ? <p className="mb-3 text-sm text-slate-600">已恢复此前保存的{draftSource === "real-ai" ? "真实 AI 草案" : "历史模拟示例"}；这不是本次模型调用结果，刷新不会重新生成。</p> : null}
                 <div className={`rounded-2xl border p-4 ${draftSource === "real-ai" ? "border-emerald-200 bg-emerald-50/80" : "border-amber-300 bg-amber-50/80"}`}>
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div>

@@ -21,6 +21,9 @@ test("distinguishes request, model, authentication, quota and rate failures", ()
   assert.equal(classifyProviderFailure(400, {error:{message:"enable_thinking must be false"}}), "invalid_request");
   assert.equal(classifyProviderFailure(400, {error:{code:"quota_exhausted"}}), "quota_exhausted");
   assert.equal(classifyProviderFailure(401, {}), "unauthorized");
+  assert.equal(classifyProviderFailure(403, {}), "unauthorized");
+  assert.equal(classifyProviderFailure(403, {errors:{message:"quota exceeded"}}), "quota_exhausted");
+  assert.equal(classifyProviderFailure(403, {errors:{message:"permission denied"}}), "unauthorized");
   assert.equal(classifyProviderFailure(429, {}), "rate_limited");
   assert.equal(classifyProviderFailure(503, {}), "provider_error");
 });

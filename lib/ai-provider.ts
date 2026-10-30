@@ -1,5 +1,4 @@
 import {
-  createMockSolutionDraft,
   type AiErrorCategory,
   type AiProvider,
   type AiSolutionDraft,
@@ -197,17 +196,16 @@ function isTimeoutError(error: unknown) {
   );
 }
 
-function fallbackResult(
-  input: GenerateAnalysisDraftInput,
+function unavailableResult(
   provider: AiProvider,
   errorCategory: AiErrorCategory,
   note: string
 ): GenerateSolutionDraftResponse {
   return {
-    source: "mock-fallback",
+    source: "unavailable",
     provider,
     errorCategory,
-    draft: createMockSolutionDraft(input.formState, input.projectContext),
+    draft: null,
     note,
   };
 }
@@ -415,22 +413,20 @@ export async function generateAnalysisDraft(
   const provider = selectedProvider();
 
   if (provider === "mock") {
-    return fallbackResult(
-      input,
+    return unavailableResult(
       "mock",
       "missing_key",
-      "未配置 AI 模型服务，已使用模拟兜底，公开 Demo 仍可正常演示。"
+      "未配置真实 AI 模型服务，请维护者检查服务配置。没有生成或保存模拟方案。"
     );
   }
 
   const apiKey = keyForProvider(provider);
 
   if (!apiKey) {
-    return fallbackResult(
-      input,
+    return unavailableResult(
       provider,
       "missing_key",
-      `当前 AI_PROVIDER=${provider}，但缺少对应 API key，已自动切换为模拟兜底。`
+      `当前 ${provider} 缺少模型服务授权，请维护者检查配置。没有生成或保存模拟方案。`
     );
   }
 
@@ -443,22 +439,20 @@ export async function generateAnalysisDraft(
           : await callChatProvider(input, provider, apiKey);
 
     if (result.errorCategory) {
-      return fallbackResult(
-        input,
+      return unavailableResult(
         provider,
         result.errorCategory,
-        `${provider} 模型服务返回 ${result.status}。${providerFailureHints[result.errorCategory as keyof typeof providerFailureHints] ?? "模型调用失败。"}本次为模拟示例，不是真实 AI 结果。`
+        `${provider} 模型服务返回 ${result.status}。${providerFailureHints[result.errorCategory as keyof typeof providerFailureHints] ?? "模型调用失败。"}没有生成或保存模拟方案。`
       );
     }
 
     const draft = parseAiDraft(result.text);
 
     if (!draft) {
-      return fallbackResult(
-        input,
+      return unavailableResult(
         provider,
         "provider_error",
-        `${provider} 模型服务返回内容未通过结构化解析，已自动切换为模拟兜底。`
+        `${provider} 返回内容未通过结构化校验，请重试。没有生成或保存模拟方案。`
       );
     }
 
@@ -468,13 +462,12 @@ export async function generateAnalysisDraft(
       ? "timeout"
       : "network_error";
 
-    return fallbackResult(
-      input,
+    return unavailableResult(
       provider,
       errorCategory,
       errorCategory === "timeout"
-        ? `${provider} 模型服务未在 ${PROVIDER_TIMEOUT_MS / 1000} 秒内完成，已自动切换为模拟兜底。`
-        : `${provider} 模型服务请求失败，已自动切换为模拟兜底，保证 Demo 可继续使用。`
+        ? `${provider} 模型服务未在 ${PROVIDER_TIMEOUT_MS / 1000} 秒内完成，请稍后重试。没有生成或保存模拟方案。`
+        : `${provider} 模型服务连接失败，请稍后重试。没有生成或保存模拟方案。`
     );
   }
 }

@@ -258,6 +258,14 @@ test("analysis input and generated draft persist into the solution workflow", as
   await page.goto("/solution", { waitUntil: "networkidle" });
   await expect(page.getByTestId("synced-analysis-draft")).toBeVisible();
   await expect(page.getByText("已同步需求分析草案")).toBeVisible();
+  await page.route("**/api/analysis/generate", route => route.abort());
+  await page.goto("/analysis", { waitUntil: "networkidle" });
+  await expect(page.getByText(/已恢复此前保存的真实 AI 草案/)).toBeVisible();
+  await page.getByRole("button", { name: "生成AI方案草案", exact: true }).click();
+  await expect(page.getByRole("alert").filter({ hasText: "本次真实 AI 生成失败" })).toContainText("本次真实 AI 生成失败");
+  await expect(page.getByRole("heading", {name:"工作流同步验证方案", exact:true})).toBeVisible();
+  await page.reload({ waitUntil: "networkidle" });
+  await expect(page.getByRole("heading", {name:"工作流同步验证方案", exact:true})).toBeVisible();
 });
 
 test("invalid local workspace data is discarded safely", async ({ page }) => {

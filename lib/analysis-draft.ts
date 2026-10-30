@@ -78,10 +78,16 @@ export type AiErrorCategory =
   | null;
 
 export type GenerateSolutionDraftResponse = {
-  source: AiGenerationSource;
+  source: "real-ai";
+  provider: AiProvider;
+  errorCategory: null;
+  draft: AiSolutionDraft;
+  note: string;
+} | {
+  source: "unavailable";
   provider: AiProvider;
   errorCategory: AiErrorCategory;
-  draft: AiSolutionDraft;
+  draft: null;
   note: string;
 };
 

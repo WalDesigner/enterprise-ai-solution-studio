@@ -17,8 +17,9 @@ export type ProviderFailure =
 // Inspect only to classify; never return or log upstream text (it may echo secrets).
 export function classifyProviderFailure(status: number, payload: unknown): ProviderFailure {
   const object = payload && typeof payload === "object" ? payload as Record<string, unknown> : {};
-  const error = object.error && typeof object.error === "object"
-    ? object.error as Record<string, unknown> : object;
+  const nested = object.error ?? object.errors;
+  const error = nested && typeof nested === "object" && !Array.isArray(nested)
+    ? nested as Record<string, unknown> : object;
   const message = [error.code, error.type, error.message]
     .filter((value): value is string => typeof value === "string").join(" ").toLowerCase();
   if (status === 401) return "unauthorized";

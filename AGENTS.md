@@ -147,3 +147,13 @@ Handoff 只保存当前增量；公开切换后的过程由 Sprint Report、Inci
 只有 OAuth / MFA / 支付 / 安全 / 权限、破坏性风险、新 Level 3 决策，或 Goal 无法
 从 Prompt 与事实源合理推断时才停止。任务困难、网络一次失败或工具异常不是自动停止
 理由；应先完成安全的诊断和替代路径。
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

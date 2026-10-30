@@ -182,5 +182,8 @@ export async function POST(request: Request) {
     projectContext,
   });
 
-  return NextResponse.json(result);
+  return NextResponse.json(result, {
+    status: result.source === "real-ai" ? 200 : 503,
+    headers: { "Cache-Control": "no-store" },
+  });
 }
