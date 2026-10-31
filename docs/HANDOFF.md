@@ -1,6 +1,6 @@
 # 当前交接
 
-更新：2026-10-30。当前维护状态如下；9 月修复验收只保留为历史证据。
+更新：2026-10-31。当前维护状态如下；9 月修复验收只保留为历史证据。
 
 ## 当前 Sprint
 用户要求在投递前完成双站维护，并永久停止“模型失败却展示模拟结果”的误导行为。
@@ -9,8 +9,9 @@
 - 已改为 fail-closed：模型失败不再创建、保存或覆盖模拟草案；已有历史草案保留并明确标注；API 失败返回 503 且禁止缓存。
 - Next.js 与配套规则升级至 16.4.3；生产依赖审计为 0。剩余告警来自本地开发工具链，不随容器运行路径发布。
 - 本轮验证：单元 14/14、浏览器 29/29、lint、Webpack production build 全部通过。Turbopack 在当前受限执行环境因临时端口权限崩溃，Webpack 构建通过，不是产品代码错误。
-- 个人站首页与案例页同日 GET 200；工作台从当前终端网络连续超时，需以 CloudBase 控制面和普通浏览器复核，不能把网络超时写成服务宕机。
-- 当前分支仍为 `maintenance/docs-2026-10-10`；修复尚未提交、推送或发布。发布后必须补写提交、版本、流量与公网验收证据。
+- 工作台修复提交 `cd315bc` 已合入并推送 `main`；CloudBase 版本 `014` 状态 normal、100% 流量，`013` 已降为 0%。
+- 首页与 `/analysis` 均 HTTP 200，线上源码包含“仅在真实 AI 生成成功后保存方案 / 不自动替换为模拟结果”文案；没有重复发起模型请求。
+- 当前真实 AI 仍待恢复：ModelScope 本地调用 403 / unauthorized。必须由项目负责人在 ModelScope 核对/轮换 Token 并直接更新 CloudBase 环境变量，之后只做一次公网真实生成。
 - 本轮完整证据与事实边界见 [2026-10-30 维护记录](MAINTENANCE_2026-10-30.md)。
 
 ## 历史：9 月真实 AI 恢复
@@ -45,9 +46,8 @@
 部署、回滚见 `DEPLOYMENT_HANDOFF.md`；能力边界见 `ARCHITECTURE.md`。
 
 ## 精确下一步
-1. 将本轮修复提交并推送到 `main`，从明确提交制作干净包发布 CloudBase；继承环境变量，不读取值。
-2. 项目负责人在 ModelScope 账户中重新确认/轮换 Access Token，并直接更新 CloudBase 的 `MODELSCOPE_API_KEY`；Token 不经过聊天、截图或仓库。
-3. 令牌修复后只执行一次公网真实生成，验收必须为 HTTP 200、`source=real-ai`、`provider=modelscope`、`errorCategory=null`、六章节完整。
-4. 在完成第 3 步前，网站页面仍可演示，但真实 AI 功能应标记为“待恢复”，不能声称已经可用。
+1. 项目负责人在 ModelScope 账户中确认/轮换 Access Token，并直接更新 CloudBase 的 `MODELSCOPE_API_KEY`；Token 不经过聊天、截图或仓库。
+2. 令牌修复后只做一次公网真实生成，验收必须为 HTTP 200、`source=real-ai`、`provider=modelscope`、`errorCategory=null`、六章节完整。
+3. 在完成第 2 步前，网站页面可演示工作流，但真实 AI 功能应标记为“待恢复”，不能声称已经可用。
 
 历史故障解释和处置表见 [修复记录](AI_RECOVERY_2026-09-21.md)。

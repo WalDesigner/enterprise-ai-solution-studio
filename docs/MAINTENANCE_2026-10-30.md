@@ -28,8 +28,8 @@
 - Webpack production build：通过。
 - 默认 Turbopack 在当前受限执行环境因临时端口权限崩溃；Webpack 同源码通过，不归类为产品缺陷。
 
-## 未完成
+## 完成与未完成
 
-- 本记录创建时修复尚未发布，生产仍可能运行旧 fallback 行为。
-- ModelScope Token/账户权限需要项目负责人在官网确认或轮换，并直接更新 CloudBase；Token 不经过聊天和仓库。
-- 发布后只做一次公网真实生成，必须取得 HTTP 200、`real-ai`、`modelscope`、`errorCategory=null` 和六章节完整证据，才能恢复“真实 AI 可用”的结论。
+- 2026-10-31 修复已通过 `cd315bcd4276dfa3d142f5849e79b4f62f77f2d1` 发布至 CloudBase 014，控制面 normal / 100% 流量；013 为 0%。首页、`/analysis` 返回 200，线上页面包含失败不自动模拟的新文案。
+- ModelScope Token/账户权限仍需项目负责人在官网确认或轮换，并直接更新 CloudBase；Token 不经过聊天和仓库。
+- 令牌修复后只做一次公网真实生成，必须取得 HTTP 200、`real-ai`、`modelscope`、`errorCategory=null` 和六章节完整证据，才能恢复“真实 AI 可用”的结论。

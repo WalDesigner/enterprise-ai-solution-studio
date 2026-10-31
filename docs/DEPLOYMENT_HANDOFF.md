@@ -1,6 +1,6 @@
 # 企业 AI 解决方案工作台：部署与运维交接
 
-> 文档状态：维护更新至 2026-10-30；最近成功真实 AI 验收仍为 2026-09-23 的版本 013。2026-10-30 ModelScope 返回 403，修复发布前不得声称当前真实 AI 可用。
+> 文档状态：维护更新至 2026-10-31；fail-closed 修复已上线 CloudBase 014（100% 流量）。最近成功真实 AI 验收仍为 2026-09-23；2026-10-30 ModelScope 返回 403，当前真实 AI 待恢复。
 >
 > 适用对象：项目接手人、发布负责人、面试演示维护者
 >
@@ -8,7 +8,7 @@
 
 ## 1. 接手人先看这张表
 
-2026-10-30：本地和此前线上各一笔有效诊断都得到 ModelScope 403。修复版已通过离线完整回归，但本页更新时尚未发布。个人站可访问；当前终端访问 CloudBase 主站超时，需用控制面与普通浏览器复核。
+2026-10-31：CloudBase `014` 已部署正常并接管 100% 流量，`013` 为 0%；首页和 `/analysis` 返回 200，分析页包含 fail-closed 新文案。真实 AI 尚未重新验收，因为账户/Token 仍返回 403，未重复消耗模型调用。
 2026-10-10 截图曾确认体验版有效至 2027-01-11、当期已用 1629.79/3000 点、按量关闭；该数字是历史快照，不代表 10 月 30 日当前周期。
 下面版本信息为最近成功回读的历史基线，不将它当作今日控制面结果。
 
@@ -17,12 +17,12 @@
 | 公开规范仓库 | `https://github.com/WalDesigner/enterprise-ai-solution-studio` |
 | 发布分支 | `main`；发布前必须读取当前 HEAD，不依赖文档中的旧快照 |
 | 公开历史边界 | 经过审查的单一 root snapshot；旧工程历史只在 Private archive 保留 |
-| 已核验发布源码 | `b794c539118515c309b23e4544f1be4621af8e81`；后续文档提交不改变运行源码 |
+| 已核验发布源码 | `cd315bcd4276dfa3d142f5849e79b4f62f77f2d1` |
 | 国内主站 | `https://enterprise-ai-studio-282223-9-1444381545.sh.run.tcloudbase.com` |
 | 国内主站核心页 | `https://enterprise-ai-studio-282223-9-1444381545.sh.run.tcloudbase.com/analysis` |
 | CloudBase 环境 | `enterprise-ai-studi-d1bhe40a167e` |
 | CloudBase 服务 | `enterprise-ai-studio` |
-| 当前已核验版本 | `013`，控制面 normal，100% 流量，IsReleasing=false；`012` / `011` 为 0% |
+| 当前已核验版本 | `014`，控制面 normal，100% 流量，IsReleasing=false；`013` 为 0% |
 | 容器运行端口 | `3000`（公网访问端口 `80` 映射到服务端口 `3000`） |
 | 国内 AI Provider | ModelScope API-Inference |
 | 本地开发地址 | `http://127.0.0.1:3101/analysis`（避免与个人作品集的 `3100` 冲突） |
