@@ -29,6 +29,7 @@ export type StoredAnalysisSession = {
   draft: AiSolutionDraft | null;
   draftSource: AiGenerationSource | null;
   draftProvider: AiProvider | null;
+  draftModel?: string | null;
   draftErrorCategory: AiErrorCategory;
   draftNote: string;
   updatedAt: string;
@@ -70,10 +71,15 @@ function isStoredAnalysisSession(value: unknown): value is StoredAnalysisSession
       typeof session.draft?.summary === "string" &&
       Array.isArray(session.draft?.sections) &&
       Array.isArray(session.draft?.assumptions));
+  const hasValidDraftModel =
+    session.draftModel === undefined ||
+    session.draftModel === null ||
+    typeof session.draftModel === "string";
 
   return Boolean(
     hasValidForm &&
       hasValidDraft &&
+      hasValidDraftModel &&
       typeof session.draftNote === "string" &&
       typeof session.updatedAt === "string"
   );

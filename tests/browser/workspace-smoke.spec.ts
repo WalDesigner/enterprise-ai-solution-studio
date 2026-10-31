@@ -218,6 +218,7 @@ test("analysis input and generated draft persist into the solution workflow", as
       body: JSON.stringify({
         source: "real-ai",
         provider: "modelscope",
+        model: "Qwen/Qwen3.5-35B-A3B",
         errorCategory: null,
         note: "工作流持久化测试。",
         draft: {
@@ -253,6 +254,7 @@ test("analysis input and generated draft persist into the solution workflow", as
     .getByRole("button", { name: "生成AI方案草案" })
     .click();
   await expect(page.getByText("AI方案草案已生成")).toBeVisible();
+  await expect(page.getByText("Qwen/Qwen3.5-35B-A3B")).toBeVisible();
   await expect(page.getByText(/已保存于/)).toBeVisible();
 
   await page.goto("/solution", { waitUntil: "networkidle" });
@@ -266,6 +268,7 @@ test("analysis input and generated draft persist into the solution workflow", as
   await expect(page.getByRole("heading", {name:"工作流同步验证方案", exact:true})).toBeVisible();
   await page.reload({ waitUntil: "networkidle" });
   await expect(page.getByRole("heading", {name:"工作流同步验证方案", exact:true})).toBeVisible();
+  await expect(page.getByText("Qwen/Qwen3.5-35B-A3B")).toBeVisible();
 });
 
 test("invalid local workspace data is discarded safely", async ({ page }) => {
@@ -329,6 +332,7 @@ test.describe("mobile interview-link experience", () => {
         body: JSON.stringify({
           source: "real-ai",
           provider: "modelscope",
+          model: "Qwen/Qwen3.5-35B-A3B",
           errorCategory: null,
           note: "移动端等待体验测试。",
           draft: {

@@ -5,13 +5,16 @@
 ## 当前 Sprint
 用户要求在投递前完成双站维护，并永久停止“模型失败却展示模拟结果”的误导行为。
 
-- 2026-10-30 仅执行一笔本地真实调用诊断：ModelScope 返回 403，接口映射为 `HTTP 503 / source=unavailable / provider=modelscope / errorCategory=unauthorized / draft=null`。本地与此前公网表现一致，故障位于 ModelScope 令牌或账户权限层，不是 CloudBase 资源点或冷启动。
+- 2026-10-30 本地真实调用曾返回 ModelScope 403，接口安全映射为 `HTTP 503 / source=unavailable / provider=modelscope / errorCategory=unauthorized / draft=null`。2026-10-31 页面显示 ModelScope 账号邮箱尚未验证、魔粒余额为 0；API-Inference 历史明细当时显示按次扣点。本人完成邮箱验证后再次操作，确认工作台已恢复真实 AI 生成。当前证据支持账户验证/免费推理资格问题，不支持令牌过期或 CloudBase 资源点耗尽为本次根因。无需轮换令牌；本轮不再调用真实 AI。
 - 已改为 fail-closed：模型失败不再创建、保存或覆盖模拟草案；已有历史草案保留并明确标注；API 失败返回 503 且禁止缓存。
 - Next.js 与配套规则升级至 16.4.3；生产依赖审计为 0。剩余告警来自本地开发工具链，不随容器运行路径发布。
 - 本轮验证：单元 14/14、浏览器 29/29、lint、Webpack production build 全部通过。Turbopack 在当前受限执行环境因临时端口权限崩溃，Webpack 构建通过，不是产品代码错误。
 - 工作台修复提交 `cd315bc` 已合入并推送 `main`；CloudBase 版本 `014` 状态 normal、100% 流量，`013` 已降为 0%。
 - 首页与 `/analysis` 均 HTTP 200，线上源码包含“仅在真实 AI 生成成功后保存方案 / 不自动替换为模拟结果”文案；没有重复发起模型请求。
-- 当前真实 AI 仍待恢复：ModelScope 本地调用 403 / unauthorized。必须由项目负责人在 ModelScope 核对/轮换 Token 并直接更新 CloudBase 环境变量，之后只做一次公网真实生成。
+- 真实 AI 恢复状态：本人于 2026-10-31 完成邮箱验证，并确认工作台随后可以成功调用真实 AI。此为用户确认，Codex 未重复发起调用，以节省免费额度。若再次出现 403，先查看账户验证状态/免费额度与模型授权；长期有效令牌此前与 CloudBase 配置一致，不要默认轮换。
+- 令牌页标注工作台令牌“写权限 / 长期有效”；用户确认与 CloudBase 配置一致并授权继续使用测试凭据。不得记录、复述或在其他渠道传递值。代码默认模型为 `Qwen/Qwen3.5-35B-A3B`，但线上 `MODELSCOPE_MODEL` 已设置且控制台遮蔽，实际值未核实。
+- Chrome 回读 CloudBase：`014` normal / 100% / 1 实例，`AI_PROVIDER=modelscope`；Key 与模型值均保持遮蔽。后续国内控制台优先使用外部 Chrome，不切 VPN。
+- 本 Sprint 完成：成功 API 响应返回实际请求所用模型 ID；需求分析结果卡片分开展示“模型服务：ModelScope”与“实际模型：<ID>”，旧草案未记录模型时明确提示，并随草案持久化。单测 14/14、lint、Webpack build、定向浏览器持久化验证 1/1 通过。按负责人要求先提交并推送 review branch；待本人检查预览后再执行正式发布 Gate，CloudBase 生产版本暂不改变。
 - 本轮完整证据与事实边界见 [2026-10-30 维护记录](MAINTENANCE_2026-10-30.md)。
 
 ## 历史：9 月真实 AI 恢复
@@ -45,9 +48,9 @@
 工作区私有 `SPRINT_CHECKPOINT.md` 保存进行中的测试/命令状态；无需重读全部聊天。
 部署、回滚见 `DEPLOYMENT_HANDOFF.md`；能力边界见 `ARCHITECTURE.md`。
 
-## 精确下一步
-1. 项目负责人在 ModelScope 账户中确认/轮换 Access Token，并直接更新 CloudBase 的 `MODELSCOPE_API_KEY`；Token 不经过聊天、截图或仓库。
-2. 令牌修复后只做一次公网真实生成，验收必须为 HTTP 200、`source=real-ai`、`provider=modelscope`、`errorCategory=null`、六章节完整。
-3. 在完成第 2 步前，网站页面可演示工作流，但真实 AI 功能应标记为“待恢复”，不能声称已经可用。
+## 当前未完成
+1. 等待本人检查推送后的本地预览；确认后执行正式发布 Gate。CloudBase 当前生产仍为 `014`。
+2. 线上实际模型配置仍由 CloudBase 遮蔽；待此代码发布后，新的成功结果会显示请求使用的模型 ID，无需查看/记录环境变量。
+3. 不需要为验证邮箱后的恢复再消耗一次真实 AI 调用；恢复状态依据本人 2026-10-31 实测反馈。
 
 历史故障解释和处置表见 [修复记录](AI_RECOVERY_2026-09-21.md)。

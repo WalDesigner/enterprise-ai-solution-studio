@@ -212,11 +212,13 @@ function unavailableResult(
 
 function realResult(
   draft: AiSolutionDraft,
-  provider: Exclude<AiProvider, "mock">
+  provider: Exclude<AiProvider, "mock">,
+  model: string
 ): GenerateSolutionDraftResponse {
   return {
     source: "real-ai",
     provider,
+    model,
     errorCategory: null,
     draft,
     note: `已通过服务端 ${provider} 模型服务生成结构化 AI 方案草案。`,
@@ -249,7 +251,11 @@ function extractGeminiText(response: GeminiGenerateContentResponse) {
   );
 }
 
-async function callOpenAI(input: GenerateAnalysisDraftInput, apiKey: string) {
+async function callOpenAI(
+  input: GenerateAnalysisDraftInput,
+  apiKey: string,
+  model: string
+) {
   const response = await fetch(OPENAI_RESPONSES_URL, {
     method: "POST",
     signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
@@ -258,7 +264,7 @@ async function callOpenAI(input: GenerateAnalysisDraftInput, apiKey: string) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      model: modelForProvider("openai"),
+      model,
       input: [
         {
           role: "system",
@@ -296,7 +302,8 @@ async function callOpenAI(input: GenerateAnalysisDraftInput, apiKey: string) {
 async function callChatProvider(
   input: GenerateAnalysisDraftInput,
   provider: "openrouter" | "groq" | "modelscope",
-  apiKey: string
+  apiKey: string,
+  model: string
 ) {
   const endpoint =
     provider === "openrouter"
@@ -321,7 +328,7 @@ async function callChatProvider(
           : {}),
       },
       body: JSON.stringify({
-        model: modelForProvider(provider),
+        model,
         messages: [
           {
             role: "system",
@@ -359,10 +366,14 @@ async function callChatProvider(
   return { text: extractChatText(payload), errorCategory: null, status: 200 };
 }
 
-async function callGemini(input: GenerateAnalysisDraftInput, apiKey: string) {
-  const model = encodeURIComponent(modelForProvider("gemini"));
+async function callGemini(
+  input: GenerateAnalysisDraftInput,
+  apiKey: string,
+  model: string
+) {
+  const encodedModel = encodeURIComponent(model);
   const response = await fetch(
-    `${GEMINI_GENERATE_CONTENT_BASE_URL}/${model}:generateContent`,
+    `${GEMINI_GENERATE_CONTENT_BASE_URL}/${encodedModel}:generateContent`,
     {
       method: "POST",
       signal: AbortSignal.timeout(PROVIDER_TIMEOUT_MS),
@@ -421,6 +432,7 @@ export async function generateAnalysisDraft(
   }
 
   const apiKey = keyForProvider(provider);
+  const model = modelForProvider(provider);
 
   if (!apiKey) {
     return unavailableResult(
@@ -433,10 +445,10 @@ export async function generateAnalysisDraft(
   try {
     const result =
       provider === "openai"
-        ? await callOpenAI(input, apiKey)
+        ? await callOpenAI(input, apiKey, model)
         : provider === "gemini"
-          ? await callGemini(input, apiKey)
-          : await callChatProvider(input, provider, apiKey);
+          ? await callGemini(input, apiKey, model)
+          : await callChatProvider(input, provider, apiKey, model);
 
     if (result.errorCategory) {
       return unavailableResult(
@@ -456,7 +468,7 @@ export async function generateAnalysisDraft(
       );
     }
 
-    return realResult(draft, provider);
+    return realResult(draft, provider, model);
   } catch (error) {
     const errorCategory: AiErrorCategory = isTimeoutError(error)
       ? "timeout"

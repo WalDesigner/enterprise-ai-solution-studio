@@ -80,6 +80,7 @@ export type AiErrorCategory =
 export type GenerateSolutionDraftResponse = {
   source: "real-ai";
   provider: AiProvider;
+  model: string;
   errorCategory: null;
   draft: AiSolutionDraft;
   note: string;

@@ -196,6 +196,7 @@ function AnalysisWorkspace({
   const [draft, setDraft] = useState<AiSolutionDraft | null>(null);
   const [draftSource, setDraftSource] = useState<AiGenerationSource | null>(null);
   const [draftProvider, setDraftProvider] = useState<AiProvider | null>(null);
+  const [draftModel, setDraftModel] = useState<string | null>(null);
   const [draftErrorCategory, setDraftErrorCategory] =
     useState<AiErrorCategory>(null);
   const [draftNote, setDraftNote] = useState("");
@@ -229,6 +230,7 @@ function AnalysisWorkspace({
         setDraft(storedSession.draft);
         setDraftSource(storedSession.draftSource);
         setDraftProvider(storedSession.draftProvider);
+        setDraftModel(storedSession.draftModel ?? null);
         setDraftErrorCategory(storedSession.draftErrorCategory);
         setDraftNote(storedSession.draftNote);
         setIsRestoredDraft(Boolean(storedSession.draft));
@@ -254,6 +256,7 @@ function AnalysisWorkspace({
         draft,
         draftSource,
         draftProvider,
+        draftModel,
         draftErrorCategory,
         draftNote,
       });
@@ -266,6 +269,7 @@ function AnalysisWorkspace({
     draft,
     draftErrorCategory,
     draftNote,
+    draftModel,
     draftProvider,
     draftSource,
     formState,
@@ -313,6 +317,7 @@ function AnalysisWorkspace({
     setDraft(null);
     setDraftSource(null);
     setDraftProvider(null);
+    setDraftModel(null);
     setDraftErrorCategory(null);
     setDraftNote("");
     setGenerationFailure(null);
@@ -370,6 +375,7 @@ function AnalysisWorkspace({
       setDraft(parsedDraft);
       setDraftSource(result.source);
       setDraftProvider(result.provider);
+      setDraftModel(result.model);
       setDraftErrorCategory(result.errorCategory);
       setDraftNote(result.note);
       setIsRestoredDraft(false);
@@ -379,6 +385,7 @@ function AnalysisWorkspace({
         draft: parsedDraft,
         draftSource: result.source,
         draftProvider: result.provider,
+        draftModel: result.model,
         draftErrorCategory: result.errorCategory,
         draftNote: result.note,
       });
@@ -539,10 +546,22 @@ function AnalysisWorkspace({
                           ? "真实 AI 生成"
                           : "模拟兜底"}
                       </span>
-                      <span className="w-fit rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs font-medium text-slate-600 shadow-sm">
-                        模型服务：{" "}
-                        {draftProvider ? providerLabels[draftProvider] : "未知"}
+                      <span className="inline-flex max-w-full flex-wrap items-center gap-x-1.5 gap-y-1 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-sm">
+                        <span className="font-medium text-slate-500">模型服务：</span>
+                        <span className="font-semibold text-slate-800">
+                          {draftProvider ? providerLabels[draftProvider] : "未知"}
+                        </span>
                       </span>
+                      {draftSource === "real-ai" ? (
+                        <span className="inline-flex max-w-full min-w-0 flex-wrap items-center gap-x-1.5 gap-y-1 rounded-full border border-sky-200 bg-sky-50 px-3 py-1.5 text-xs shadow-sm">
+                          <span className="shrink-0 font-medium text-sky-700">
+                            {draftModel ? "实际模型：" : "模型信息："}
+                          </span>
+                          <code className="min-w-0 break-all font-mono text-[11px] leading-5 text-sky-950" title={draftModel ? "本次真实 AI 请求使用的模型标识" : "该草案由旧版本生成，未保存模型标识"}>
+                            {draftModel ?? "旧版草案未记录"}
+                          </code>
+                        </span>
+                      ) : null}
                       {draftErrorCategory ? (
                         <span className="w-fit rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-700 shadow-sm">
                           {errorCategoryLabels[draftErrorCategory]}
