@@ -14,7 +14,7 @@
 - 真实 AI 恢复状态：本人于 2026-10-31 完成邮箱验证，并确认工作台随后可以成功调用真实 AI。此为用户确认，Codex 未重复发起调用，以节省免费额度。若再次出现 403，先查看账户验证状态/免费额度与模型授权；长期有效令牌此前与 CloudBase 配置一致，不要默认轮换。
 - 令牌页标注工作台令牌“写权限 / 长期有效”；用户确认与 CloudBase 配置一致并授权继续使用测试凭据。不得记录、复述或在其他渠道传递值。代码默认模型为 `Qwen/Qwen3.5-35B-A3B`，但线上 `MODELSCOPE_MODEL` 已设置且控制台遮蔽，实际值未核实。
 - Chrome 回读 CloudBase：`014` normal / 100% / 1 实例，`AI_PROVIDER=modelscope`；Key 与模型值均保持遮蔽。后续国内控制台优先使用外部 Chrome，不切 VPN。
-- 2026-11-02 本人已检查模型 ID 展示页面。随后仅修改 package.json / package-lock.json，未改产品页面或生产 AI 路径。依赖修复后单元 14/14、lint、Webpack production build、浏览器回归 29/29 通过；浏览器测试使用拦截数据，不调用真实 AI。依赖变更仍待提交、推送与后续发布 Gate；CloudBase 生产版本仍为 014，未改变。
+- 2026-11-02 本人已检查模型 ID 展示页面。随后仅修改 package.json / package-lock.json，未改产品页面或生产 AI 路径。依赖修复后单元 14/14、lint、Webpack production build、浏览器回归 29/29 通过；浏览器测试使用拦截数据，不调用真实 AI。修复提交 `b5e083a` 已快进推送 `main`。CloudBase 生产仍为 014；CLI 设备授权因当前网络 DNS 失败、网页授权因本机监听端口受限，未执行部署。
 - 本轮完整证据与事实边界见 [2026-10-30 维护记录](MAINTENANCE_2026-10-30.md)。
 
 ## 历史：9 月真实 AI 恢复
@@ -49,7 +49,7 @@
 部署、回滚见 `DEPLOYMENT_HANDOFF.md`；能力边界见 `ARCHITECTURE.md`。
 
 ## 当前未完成
-1. 本人页面检查已完成，依赖修复后的本地 Gate 已通过。下一步提交并推送 review branch，再将其合入发布分支后执行 CloudBase 发布 Gate。CloudBase 当前生产仍为 `014`。
+1. 依赖修复已合入 `main` 并通过本地 Gate。下一步需恢复 CloudBase CLI 登录或在控制台手动上传已制作的干净发布包，再按已确认的免费版流程部署。CloudBase 当前生产仍为 `014`。
 2. 线上实际模型配置仍由 CloudBase 遮蔽；待此代码发布后，新的成功结果会显示请求使用的模型 ID，无需查看/记录环境变量。
 3. 不需要为验证邮箱后的恢复再消耗一次真实 AI 调用；恢复状态依据本人 2026-10-31 实测反馈。
 

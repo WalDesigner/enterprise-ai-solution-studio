@@ -1,6 +1,6 @@
 # 企业 AI 解决方案工作台：部署与运维交接
 
-> 文档状态：维护更新至 2026-11-02；fail-closed 修复已上线 CloudBase 014（100% 流量）。2026-10-31 用户完成 ModelScope 邮箱验证后确认工作台恢复真实 AI；Codex 未重复调用。模型 ID 展示页面已由本人检查；本轮依赖安全更新仅涉及 package.json / package-lock.json。单测 14/14、lint、Webpack production build、浏览器回归 29/29 通过；生产依赖审计 0 项，全量审计剩余 3 个 shadcn 开发工具链低危项。依赖更新待提交、推送及合入发布分支；CloudBase 014 尚未变更。
+> 文档状态：维护更新至 2026-11-02；fail-closed 修复已上线 CloudBase 014（100% 流量）。2026-10-31 用户完成 ModelScope 邮箱验证后确认工作台恢复真实 AI；Codex 未重复调用。模型 ID 展示页面已由本人检查；依赖安全更新提交 `b5e083a` 已快进推送 `main`。单测 14/14、lint、Webpack production build、浏览器回归 29/29 通过；生产依赖审计 0 项，全量审计剩余 3 个 shadcn 开发工具链低危项。当前 CloudBase 控制台回读仍为 014 normal / 100%；CLI 网页授权受本机监听权限限制、设备授权受 DNS 失败阻塞，因此新版本尚未部署。
 >
 > 适用对象：项目接手人、发布负责人、面试演示维护者
 >
