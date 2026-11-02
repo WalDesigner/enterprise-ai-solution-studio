@@ -1,6 +1,6 @@
 # 企业 AI 解决方案工作台：部署与运维交接
 
-> 文档状态：维护更新至 2026-10-31；fail-closed 修复已上线 CloudBase 014（100% 流量）。2026-10-31 用户完成 ModelScope 邮箱验证后确认工作台恢复真实 AI；Codex 未重复调用。本地 Sprint 的实际模型 ID 展示与回归已完成，按负责人要求先推送 review branch，等待本人核对预览后再执行正式发布 Gate。
+> 文档状态：维护更新至 2026-11-02；fail-closed 修复已上线 CloudBase 014（100% 流量）。2026-10-31 用户完成 ModelScope 邮箱验证后确认工作台恢复真实 AI；Codex 未重复调用。模型 ID 展示页面已由本人检查；本轮依赖安全更新仅涉及 package.json / package-lock.json。单测 14/14、lint、Webpack production build、浏览器回归 29/29 通过；生产依赖审计 0 项，全量审计剩余 3 个 shadcn 开发工具链低危项。依赖更新待提交、推送及合入发布分支；CloudBase 014 尚未变更。
 >
 > 适用对象：项目接手人、发布负责人、面试演示维护者
 >
